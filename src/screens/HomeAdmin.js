@@ -1,11 +1,13 @@
-import { Badge, Box, Flex, HStack, Pressable, Image, AspectRatio, VStack, StatusBar } from 'native-base';
-import React, { useContext, useEffect, useState } from 'react';
+import { Box, HStack, VStack, StatusBar } from 'native-base';
+import React, { useContext, useEffect, useMemo } from 'react';
 import {
     StyleSheet,
     View,
     Text,
-    FlatList,
+    ScrollView,
     TouchableOpacity,
+    Image,
+    Dimensions,
 } from 'react-native';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { FirebaseContext } from '../../redux';
@@ -16,184 +18,224 @@ import * as actions from '../../redux/actions/homeactions';
 import Spinner from '../components/Spinner';
 import { STATUS_ORDER_COMPLETED, STATUS_QUOTE_REQUESTED, STATUS_QUOTE_SEND } from '../common/Constants';
 
-function HomeAdmin(props) {
+const DASHBOARD_ITEMS = [
+    {
+        title: 'Total Users',
+        key: 'totalUsers',
+        icon: require('../../assets/user-menu-icon.png'),
+        route: 'Users',
+    },
+    {
+        title: 'Total Products',
+        key: 'totalProducts',
+        icon: require('../../assets/total-products-icon.png'),
+        route: 'Products',
+    },
+    {
+        title: 'Send Quotes',
+        key: 'totalSendQuotes',
+        icon: require('../../assets/send-quotes-icon.png'),
+        route: 'Order',
+    },
+    {
+        title: 'Completed Order',
+        key: 'totalCompleteOrders',
+        icon: require('../../assets/complate-order-icon.png'),
+        route: 'Order',
+    },
+    {
+        title: 'Reports',
+        key: 'reports',
+        icon: require('../../assets/reports-icon.png'),
+        route: 'Reports',
+        hideCount: true,
+    },
+    {
+        title: 'Broadcast',
+        key: 'broadcast',
+        icon: require('../../assets/received_quotes-icon.png'),
+        route: 'NotificationBroadcast',
+        hideCount: true,
+    },
+];
 
+function HomeAdmin(props) {
     const { api } = useContext(FirebaseContext);
     const dispatch = useDispatch();
     const auth = useSelector(state => state.auth);
     const { width, isDesktop } = useWindowWidth();
-    const cardWidth = isDesktop ? (width - 80) / 3 : width / 2.25;
+
+    const screenWidth = width || Dimensions.get('window').width;
+    const columns = isDesktop ? 3 : 2;
+    const horizontalGap = 10;
+    const containerPadding = 16;
+    const cardWidth = (screenWidth - containerPadding * 2 - horizontalGap * (columns - 1)) / columns;
+    const cardHeight = cardWidth * 0.95;
 
     useEffect(() => {
-        Promise.all([
-            dispatch(api.fetchTotalUsersCount()),
-            dispatch(api.fetchTotalProductCount()),
-            dispatch(api.fetchTotalQuoteCount(STATUS_QUOTE_REQUESTED)),
-            dispatch(api.fetchTotalQuoteCount(STATUS_QUOTE_SEND)),
-            dispatch(api.fetchTotalQuoteCount(STATUS_ORDER_COMPLETED))
-        ]);
+        dispatch(api.fetchTotalUsersCount());
+        dispatch(api.fetchTotalProductCount());
+        dispatch(api.fetchTotalQuoteCount(STATUS_QUOTE_REQUESTED));
+        dispatch(api.fetchTotalQuoteCount(STATUS_QUOTE_SEND));
+        dispatch(api.fetchTotalQuoteCount(STATUS_ORDER_COMPLETED));
     }, [dispatch, api.fetchTotalUsersCount, api.fetchTotalProductCount, api.fetchTotalQuoteCount]);
 
-    const showLoader = () => {
-        if (props.loading == true) {
-            return <Spinner />
-        }
-    }
+    const counts = useMemo(() => ({
+        totalUsers: props.totalUsers ?? 0,
+        totalProducts: props.totalProducts ?? 0,
+        totalSendQuotes: props.totalSendQuotes ?? 0,
+        totalCompleteOrders: props.totalCompleteOrders ?? 0,
+    }), [props.totalUsers, props.totalProducts, props.totalSendQuotes, props.totalCompleteOrders]);
 
-    const renderData = ({ item }) => {
-        return <TouchableOpacity
-            activeOpacity={0.9}
-            style={[styles.mainCard, { width: cardWidth, height: cardWidth * 0.95 }]}
-            onPress={() => {
-                if (item.route) {
-                    props.navigation.navigate(item.route);
-                }
-            }}
-        >
-            <VStack justifyContent="space-between" flex={1} marginY="1.5" overflow="hidden">
-                <Text style={styles.countText}>{item.count}</Text>
-                <Image
-                    source={item.icon}
-                    style={styles.box_icon}
-                />
-                <Text style={styles.text}>{item.title}</Text>
-            </VStack>
-        </TouchableOpacity>;
-    }
+    const showLoader = () => {
+        if (props.loading === true) {
+            return <Spinner />;
+        }
+    };
+
+    const getCountForItem = (item) => {
+        if (item.hideCount) return null;
+        return counts[item.key] ?? 0;
+    };
 
     return (
         <View style={globleStyles.mainViewWithColor}>
             <StatusBar backgroundColor={colors.SURFACE} barStyle={'dark-content'} />
             <Box safeAreaTop bg={colors.SURFACE} pt="2" />
-            <View style={globleStyles.subMainView}>
-                <HStack justifyContent='space-between' alignItems="center" mb="4">
-                    <VStack flex={1}>
-                        <Text style={globleStyles.sectionTitle}>Dashboard</Text>
-                        <Text style={globleStyles.screenDescription}>
-                            Overview of users, products, quotes, and orders.
-                        </Text>
-                    </VStack>
-                    {auth.info.image ?
-                        <Image
-                            source={{ uri: auth.info.image }}
-                            style={{ width: 48, height: 48, borderRadius: 12 }}
-                        />
-                        :
-                        <Image
-                            source={require('../../assets/icon.png')}
-                            style={{ width: 48, height: 48, borderRadius: 12 }}
-                        />
-                    }
-                </HStack>
 
-                <FlatList
-                    refreshing={true}
-                    keyExtractor={(item, index) => index.toString()}
-                    showsVerticalScrollIndicator={false}
-                    data={[{
-                        title: "Total Users",
-                        count: props.totalUsers,
-                        icon: require('../../assets/user-menu-icon.png'),
-                        route: 'Users'
-                    }, {
-                        title: "Total Products",
-                        count: props.totalProducts,
-                        icon: require('../../assets/total-products-icon.png'),
-                        route: 'Products'
-                    },
-                    {
-                        title: "Send Quotes",
-                        count: props.totalSendQuotes,
-                        icon: require('../../assets/send-quotes-icon.png'),
-                        route: 'Order'
-                    }, {
-                        title: "Completed Order",
-                        count: props.totalCompleteOrders,
-                        icon: require('../../assets/complate-order-icon.png'),
-                        route: 'Order'
-                    }, {
-                        title: "Reports",
-                        count: '',
-                        icon: require('../../assets/reports-icon.png'),
-                        route: 'Reports'
-                    }, {
-                        title: "Broadcast",
-                        count: '',
-                        icon: require('../../assets/received_quotes-icon.png'),
-                        route: 'NotificationBroadcast'
-                    }
-                    ]}
-                    // extraData={this.state}
-                    renderItem={renderData}
-                    style={{
-                        flex: 0, paddingTop: 5,
-                        backgroundColor: colors.fullTransparent,
-                        alignSelf: 'center',
-                    }}
-                    numColumns={isDesktop ? 3 : 2}
-                    fadingEdgeLength={50}
-                    contentContainerStyle={
-                        {
-                            backgroundColor: colors.fullTransparent,
-                        }
-                    }
-                />
-            </View>
+            <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={globleStyles.subMainView}>
+                    <HStack justifyContent="space-between" alignItems="center" mb="4">
+                        <VStack flex={1} pr="3">
+                            <Text style={globleStyles.sectionTitle}>Dashboard</Text>
+                            <Text style={globleStyles.screenDescription}>
+                                Overview of users, products, quotes, and orders.
+                            </Text>
+                        </VStack>
+                        <Image
+                            source={
+                                auth.info?.image
+                                    ? { uri: auth.info.image }
+                                    : require('../../assets/icon.png')
+                            }
+                            style={styles.avatar}
+                        />
+                    </HStack>
+
+                    <View style={styles.grid}>
+                        {DASHBOARD_ITEMS.map((item, index) => {
+                            const count = getCountForItem(item);
+                            const isLastInRow = (index + 1) % columns === 0;
+                            return (
+                                <TouchableOpacity
+                                    key={item.key}
+                                    activeOpacity={0.9}
+                                    style={[
+                                        styles.mainCard,
+                                        {
+                                            width: cardWidth,
+                                            minHeight: cardHeight,
+                                            marginRight: isLastInRow ? 0 : horizontalGap,
+                                            marginBottom: horizontalGap,
+                                        },
+                                    ]}
+                                    onPress={() => {
+                                        if (item.route) {
+                                            props.navigation.navigate(item.route);
+                                        }
+                                    }}
+                                >
+                                    <View style={styles.cardContent}>
+                                        {count !== null && (
+                                            <Text style={styles.countText}>{count}</Text>
+                                        )}
+                                        <Image source={item.icon} style={styles.boxIcon} resizeMode="contain" />
+                                        <Text style={styles.cardTitle}>{item.title}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </View>
+            </ScrollView>
+
             {showLoader()}
         </View>
     );
 }
-const mapStateToProps = (state) => {
-    // console.log(state.auth.phonenumber);
-    return {
-        totalUsers: state.homedata.totalUsers,
-        totalProducts: state.homedata.totalProducts,
-        totalReceivedQuotes: state.homedata.totalReceivedQuotes,
-        totalSendQuotes: state.homedata.totalSendQuotes,
-        totalCompleteOrders: state.homedata.totalCompleteOrders,
-        totalReport: state.homedata.totalReport,
-        loading: state.homedata.loading,
-        error: state.homedata.error
-    }
-};
-export default connect(mapStateToProps, actions)(HomeAdmin)
+
+const mapStateToProps = (state) => ({
+    totalUsers: state.homedata.totalUsers,
+    totalProducts: state.homedata.totalProducts,
+    totalReceivedQuotes: state.homedata.totalReceivedQuotes,
+    totalSendQuotes: state.homedata.totalSendQuotes,
+    totalCompleteOrders: state.homedata.totalCompleteOrders,
+    totalReport: state.homedata.totalReport,
+    loading: state.homedata.loading,
+    error: state.homedata.error,
+});
+
+export default connect(mapStateToProps, actions)(HomeAdmin);
 
 const styles = StyleSheet.create({
-    countText: {
-        ...globleStyles.subHeader,
-        fontSize: 36,
-        color: colors.GREY_9,
-        paddingHorizontal: 10,
+    scroll: {
+        flex: 1,
     },
-    box_icon: {
-        width: 80,
-        height: 80,
-        position: 'absolute',
-        right: -16,
-        opacity: 0.9,
+    scrollContent: {
+        flexGrow: 1,
+        paddingBottom: 120,
     },
-    text: {
-        fontSize: 18,
-        ...globleStyles.fontMedium,
-        color: colors.TEXT_PRIMARY,
-        paddingHorizontal: 10,
-        paddingBottom: 4,
+    avatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 12,
+    },
+    grid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'flex-start',
     },
     mainCard: {
-        flexDirection: 'column',
-        marginHorizontal: 5,
-        marginTop: 5,
-        marginBottom: 5,
-        paddingTop: 8,
-        paddingBottom: 8,
         backgroundColor: colors.WHITE,
         borderColor: colors.BORDER,
         borderWidth: 1,
         borderRadius: 16,
+        paddingTop: 10,
+        paddingBottom: 10,
         shadowColor: colors.BLACK,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.08,
         shadowRadius: 8,
         elevation: 3,
+        overflow: 'hidden',
     },
-})
+    cardContent: {
+        flex: 1,
+        justifyContent: 'space-between',
+        minHeight: 120,
+        paddingHorizontal: 10,
+    },
+    countText: {
+        ...globleStyles.subHeader,
+        fontSize: 32,
+        color: colors.GREY_9,
+    },
+    boxIcon: {
+        width: 72,
+        height: 72,
+        position: 'absolute',
+        right: -8,
+        bottom: 28,
+        opacity: 0.9,
+    },
+    cardTitle: {
+        fontSize: 16,
+        ...globleStyles.fontMedium,
+        color: colors.TEXT_PRIMARY,
+        marginTop: 8,
+    },
+});
