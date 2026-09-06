@@ -11,6 +11,8 @@ import {
   Image
 } from 'react-native';
 import { NavigationActions } from "react-navigation";
+import NavigationService from './NavigationService';
+import { confirmSignOut, performSignOut } from '../common/logout';
 import Spinner from './Spinner';
 import globleStyles from '../common/globleStyles';
 import DrawerItem from './DrawerItem';
@@ -79,36 +81,11 @@ export default function Drawer(props) {
 
   const onLogout = () => {
     props.navigation.closeDrawer();
-    Alert.alert(
-      'SIGNOUT!',
-      'Are you sure you want to signout?',
-      [
-        { text: 'NO', onPress: () => { console.log("sd") } },
-        {
-          text: 'YES', onPress: () => {
-            logout();
-          }
-        },
-      ],
-      { cancelable: false }
-    )
+    confirmSignOut(() => performSignOut(dispatch, api.signOut));
   }
 
   const logout = () => {
-    /*props.navigation.dispatch(NavigationActions.navigate({
-      routeName:"Auth",
-    }))*/
-    dispatch(api.signOut());
-    props.navigation.dispatch({
-      type: NavigationActions.NAVIGATE,
-      routeName: 'AuthRoot',
-      key: null,
-      action: {
-        type: NavigationActions.RESET,
-        index: 0,
-        actions: [{ type: NavigationActions.RESET, routeName: 'AuthRoot' }]
-      }
-    })
+    performSignOut(dispatch, api.signOut);
   }
 
   const showSubscriptionBtn = () => {

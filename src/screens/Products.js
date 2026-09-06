@@ -1,4 +1,4 @@
-import { Box, VStack, ScrollView, HStack, StatusBar, AlertDialog, Button, Switch, Stack } from 'native-base';
+import { Box, VStack, HStack, StatusBar, AlertDialog, Button, Switch, Stack } from 'native-base';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
     StyleSheet,
