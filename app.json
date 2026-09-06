@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "Melting Solution",
+    "slug": "melting-solution",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.meltingsolution",
+      "versionCode": 1,
+      "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi": true,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA_ROLL",
+        "FOREGROUND_SERVICE"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBzdTXBkHpTLdooSBlbvq2SGmG3SIpIUz8"
+        }
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "Melting Solution",
+      "shortName": "Melting",
+      "lang": "en",
+      "themeColor": "#0B3D91",
+      "backgroundColor": "#ffffff",
+      "display": "standalone",
+      "description": "B2B industrial marketplace for quotes and orders"
+    }
+  }
+}

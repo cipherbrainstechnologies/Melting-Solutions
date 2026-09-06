@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "342802490607",
+    "project_id": "melting-solution",
+    "storage_bucket": "melting-solution.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:342802490607:android:6b5b6ddb41ed167421671a",
+        "android_client_info": {
+          "package_name": "com.meltingsolution"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "342802490607-3m4kr6un0ooqutn014752am1k4v7l7i3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.meltingsolution",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "342802490607-gvmrmckbk4slb8th5nsbsrgu21s54o0l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZT-8RaKSphCJ9MQVifMw08vxR-7iUsJg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "342802490607-gvmrmckbk4slb8th5nsbsrgu21s54o0l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
