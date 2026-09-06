@@ -26,6 +26,7 @@ import SearchProduct from '../screens/SearchProduct';
 import NotificationBroadcast from '../screens/NotificationBroadcast';
 import Reports from '../screens/Reports';
 import ForgotPassword from '../screens/ForgotPassword';
+import Landing from '../screens/Landing';
 import AnimatedTabIcon from '../components/AnimatedTabIcon';
 
 const tabBarStyle = {
@@ -69,11 +70,12 @@ function getAdminTabIcon(routeName, focused, tintColor) {
 }
 
 export const AuthStack = createStackNavigator({
+    Landing: { screen: Landing, navigationOptions: { gestureEnabled: false } },
     Login: { screen: Login, navigationOptions: { gestureEnabled: false } },
     Register: { screen: Register, navigationOptions: { gestureEnabled: false } },
     ForgotPassword: { screen: ForgotPassword, navigationOptions: { gestureEnabled: false } },
 }, {
-    initialRouteName: 'Login',
+    initialRouteName: Platform.OS === 'web' ? 'Landing' : 'Login',
     headerMode: 'none',
     header: null,
     cardStyle: { shadowColor: 'transparent' },

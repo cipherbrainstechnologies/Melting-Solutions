@@ -18,6 +18,7 @@ import { connect, useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../redux/actions/authactions';
 import { showToastError, validateEmail } from '../../redux/actions/Validation';
 import { FirebaseContext } from '../../redux';
+import { trackEvent, AnalyticsEvents } from '../common/analytics';
 import Spinner from '../components/Spinner';
 import FadeInView from '../components/FadeInView';
 import { not_logged_in } from '../common/Constants';
@@ -41,6 +42,7 @@ function Login(props) {
 
     useEffect(() => {
         if (!auth.loading && auth.info && auth.info.uid) {
+            trackEvent(AnalyticsEvents.LOGIN_SUCCESS, { role: auth.info.usertype });
             props.navigation.navigate('AuthLoading');
         }
     }, [auth.info, auth.loading]);

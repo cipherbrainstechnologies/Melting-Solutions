@@ -6,7 +6,8 @@ import {
     Text,
     TouchableOpacity,
     FlatList,
-    Image
+    Image,
+    RefreshControl,
 } from 'react-native';
 import globleStyles from '../common/globleStyles';
 import { colors } from '../common/theme';
@@ -16,9 +17,10 @@ import { InputCard } from '../components/InputCard';
 import { Entypo, Ionicons } from 'react-native-vector-icons';
 import { FirebaseContext } from '../../redux';
 import { connect, useDispatch, useSelector } from 'react-redux';
-import Spinner from '../components/Spinner';
 import FadeInView from '../components/FadeInView';
+import { SkeletonList } from '../components/SkeletonLoader';
 import { motion } from '../common/animations';
+import { useRefresh } from '../hooks/useRefresh';
 import * as actions from '../../redux/actions/useractions';
 import { showToastError } from '../../redux/actions/Validation';
 
@@ -49,11 +51,16 @@ function Users(props) {
         return () => unsubRef && unsubRef();
     }, [dispatch, api.fetchUsers]);
 
-    const showLoader = () => {
-        if (loading === true) {
-            return <Spinner />;
-        }
+    const reloadUsers = () => {
+        if (unsubRef) unsubRef();
+        unsubRef = dispatch(api.fetchUsers());
     };
+
+    const { refreshing, onRefresh } = useRefresh(async () => {
+        reloadUsers();
+    });
+
+    const showSkeleton = loading && (!users || users.length === 0);
 
     const onDeleteUser = () => {
         onClose();
@@ -168,6 +175,9 @@ function Users(props) {
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.PRIMARY_DARK} />
+                }
             >
                 <Box w="100%" maxW={layout.cardMaxWidth} alignSelf="center" px="4" py="4">
                     <HStack justifyContent="space-between" alignItems="center" mb="4">
@@ -203,6 +213,9 @@ function Users(props) {
                         />
                     </HStack>
 
+                    {showSkeleton ? (
+                        <SkeletonList count={4} />
+                    ) : (
                     <FlatList
                         keyExtractor={(item, index) => item.uid || index.toString()}
                         scrollEnabled={false}
@@ -218,11 +231,11 @@ function Users(props) {
                             </View>
                         }
                     />
+                    )}
                 </Box>
             </ScrollView>
 
             {deleteAlertView()}
-            {showLoader()}
         </View>
     );
 }

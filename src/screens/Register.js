@@ -20,6 +20,7 @@ import { connect, useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../redux/actions/authactions';
 import { showToastError, validateEmail } from '../../redux/actions/Validation';
 import { FirebaseContext } from '../../redux';
+import { trackEvent, AnalyticsEvents } from '../common/analytics';
 import Spinner from '../components/Spinner';
 
 function Register(props) {
@@ -46,6 +47,7 @@ function Register(props) {
 
     useEffect(() => {
         if (!auth.loading && auth.info && auth.info.uid) {
+            trackEvent(AnalyticsEvents.REGISTER_SUCCESS, { role: auth.info.usertype });
             props.navigation.navigate('AuthLoading');
         }
     }, [auth.info, auth.loading]);

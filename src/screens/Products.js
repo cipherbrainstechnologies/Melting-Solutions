@@ -6,6 +6,8 @@ import {
     Text,
     TouchableOpacity,
     Image,
+    ScrollView,
+    RefreshControl,
 } from 'react-native';
 import globleStyles from '../common/globleStyles';
 import { colors, layout } from '../common/theme';
@@ -17,11 +19,12 @@ import * as actions from '../../redux/actions/productactions';
 import { connect, useDispatch } from 'react-redux';
 import { FirebaseContext } from '../../redux';
 import { showToastError } from '../../redux/actions/Validation';
-import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
 import FadeInView from '../components/FadeInView';
+import { SkeletonList } from '../components/SkeletonLoader';
 import { PRODUCT_RESET } from '../../redux/store/type';
 import { motion } from '../common/animations';
+import { useRefresh } from '../hooks/useRefresh';
 
 let unsubRef = null;
 
@@ -47,9 +50,17 @@ function Products(props) {
         return () => unsubRef && unsubRef();
     }, [dispatch, api.fetchProducts]);
 
-    const showLoader = () => {
-        if (props.loading) return <Spinner />;
+    const reloadProducts = () => {
+        if (unsubRef) unsubRef();
+        unsubRef = dispatch(api.fetchProducts());
     };
+
+    const { refreshing, onRefresh } = useRefresh(async () => {
+        reloadProducts();
+    });
+
+    const products = props.products || [];
+    const showSkeleton = props.loading && products.length === 0;
 
     const onDeleteProduct = () => {
         onClose();
@@ -113,14 +124,18 @@ function Products(props) {
         </FadeInView>
     );
 
-    const products = props.products || [];
-
     return (
         <View style={globleStyles.mainView}>
             <StatusBar backgroundColor={colors.WHITE} barStyle="dark-content" />
             <Header title="Products" isLeftIconHide isTitleCenter={false} />
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.PRIMARY_DARK} />
+                }
+            >
                 <Box w="100%" maxW={layout.cardMaxWidth} alignSelf="center" px="4" py="4">
                     <FadeInView>
                         <HStack justifyContent="space-between" alignItems="center" mb="4">
@@ -153,7 +168,9 @@ function Products(props) {
                         rightIcon={<Entypo name="magnifying-glass" color={colors.PRIMARY_DARK} size={20} />}
                     />
 
-                    {products.length === 0 && !props.loading ? (
+                    {showSkeleton ? (
+                        <SkeletonList count={4} />
+                    ) : products.length === 0 ? (
                         <EmptyState
                             icon="cube-outline"
                             title="No products yet"
@@ -184,8 +201,6 @@ function Products(props) {
                     </AlertDialog.Footer>
                 </AlertDialog.Content>
             </AlertDialog>
-
-            {showLoader()}
         </View>
     );
 }

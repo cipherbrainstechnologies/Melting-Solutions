@@ -44,4 +44,7 @@ export const landingCopy = {
   finalTitle: 'Start your next industrial quote today',
   finalSub: 'Create a buyer account in minutes and submit your first quote request.',
   finalCta: 'Create account',
+  growthTitle: 'Built for growth',
+  growthHeadline: 'Turn catalog traffic into repeat quote revenue',
+  growthSub: 'Melting Solution connects product discovery, quote negotiation, and order fulfilment — so procurement teams stay engaged and admins can scale without adding friction.',
 };
