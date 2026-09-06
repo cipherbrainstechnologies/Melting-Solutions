@@ -1,32 +1,26 @@
-import { Box, Center, FormControl, Stack, VStack, WarningOutlineIcon, ScrollView, Input, Icon, StatusBar } from 'native-base';
+import { Box, Center, FormControl, VStack, WarningOutlineIcon, ScrollView, StatusBar } from 'native-base';
 import React, { useContext, useEffect, useState } from 'react';
 import {
     StyleSheet,
     View,
     Text,
-    TouchableOpacity,
-    Dimensions,
-    Image,
-    Linking
 } from 'react-native';
-import { FontSemiBold } from '../common/Constants';
 import globleStyles from '../common/globleStyles';
 import { colors } from '../common/theme';
+import { layout } from '../common/responsive';
 import Header from '../components/Header';
 import { InputCard } from '../components/InputCard';
 import { Entypo, MaterialIcons } from 'react-native-vector-icons';
 import MaterialButtonDark from '../components/MaterialButtonDark';
 import { connect, useDispatch, useSelector } from 'react-redux';
-var { width } = Dimensions.get('window');
 import * as actions from '../../redux/actions/useractions';
-import { showToastError, validateEmail, validatePhonenumber } from '../../redux/actions/Validation';
+import { showToastError, showToastSuccess, validateEmail, validatePhonenumber } from '../../redux/actions/Validation';
 import { FirebaseContext } from '../../redux';
 import Spinner from '../components/Spinner';
 
 function AddUser(props) {
     const { api } = useContext(FirebaseContext);
     const dispatch = useDispatch();
-    const auth = useSelector(state => state.auth);
     const users = useSelector(state => state.usersdata);
 
     const {
@@ -44,114 +38,223 @@ function AddUser(props) {
         userGSTNumberChange,
     } = props;
 
+    const uid = props.navigation.getParam('uid');
+    const isEditMode = Boolean(uid);
+
     const [error, setError] = useState(null);
     const [showGST, setShowGST] = useState(false);
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     useEffect(() => {
-        // console.log("auth login==> ", auth);
+        if (!isEditMode) {
+            dispatch(api.resetUserForm());
+        }
+    }, [dispatch, api.resetUserForm, isEditMode]);
 
-        // if (auth.info) {
-        //     console.log("auth login======> ");
-        //     props.navigation.navigate('AuthLoading');
-        // }
+    useEffect(() => {
         if (users.error && users.error.msg) {
             showToastError(users.error.msg);
+            dispatch(api.clearUserError());
         }
 
-    }, [users.error, users.error.msg]);
+        if (users.success === 'success') {
+            if (users.success_status === 'create_success') {
+                showToastSuccess('User created successfully');
+            } else if (users.success_status === 'edit_success') {
+                showToastSuccess('User updated successfully');
+            }
+            dispatch(api.clearUserError());
+            props.navigation.goBack();
+        }
+    }, [users.error, users.error.msg, users.success, users.success_status]);
 
+    const validateForm = () => {
+        if (!first_name) {
+            return { first_name: 'Please enter first name' };
+        }
+        if (!last_name) {
+            return { last_name: 'Please enter last name' };
+        }
+        if (!email || !validateEmail(email)) {
+            return { email: 'Please enter a valid email address' };
+        }
+        if (!mobile_number || !validatePhonenumber(mobile_number)) {
+            return { mobile_number: 'Please enter a valid mobile number' };
+        }
+        if (!company_name) {
+            return { company_name: 'Please enter company name' };
+        }
+        if (!gst_number) {
+            return { gst_number: 'Please enter GST number' };
+        }
+        if (!isEditMode) {
+            if (!password || password.length < 6) {
+                return { password: 'Password must be at least 6 characters' };
+            }
+            if (password !== confirmPassword) {
+                return { confirmPassword: 'Passwords do not match' };
+            }
+        }
+        return null;
+    };
 
     const _attemptSubmit = () => {
-        const { email, first_name, last_name, mobile_number, company_name, gst_number } = props;
-        setError(null)
-        if (first_name == undefined || first_name == "") {
-            setError({ first_name: "Please enter first name" })
-        } else if (last_name == undefined || last_name == "") {
-            setError({ last_name: "Please enter last name" })
-        } else if (email == "" || !validateEmail(email)) {
-            setError({ email: "Please enter valid email address" })
-        } else if (mobile_number == "" || !validatePhonenumber(mobile_number)) {
-            setError({ mobile_number: "Please enter valid mnobile number" })
-        } else if (company_name == undefined || company_name == "") {
-            setError({ company_name: "Please enter company name" })
-        } else if (gst_number == undefined || gst_number == "") {
-            setError({ gst_number: "Please enter GST number" })
-        } else {
-            dispatch(api.editUser(props.navigation.getParam('uid')))
+        const validationError = validateForm();
+        if (validationError) {
+            setError(validationError);
+            return;
         }
-    }
+
+        setError(null);
+        if (isEditMode) {
+            dispatch(api.editUser(uid));
+        } else {
+            dispatch(api.adminCreateUser(password));
+        }
+    };
 
     const showLoader = () => {
-        if (props.loading == true) {
-            return <Spinner />
+        if (props.loading === true) {
+            return <Spinner />;
         }
-    }
+    };
 
     return (
         <View style={globleStyles.mainView}>
             <StatusBar backgroundColor={colors.WHITE} barStyle={'dark-content'} />
-            <Header title={'Edit User'} onPress={() => props.navigation.goBack()} isTitleCenter={false} />
-            <ScrollView _contentContainerStyle={{
-                // px: "10px",
-                mb: "4",
-                minW: "72"
-            }}>
+            <Header
+                title={isEditMode ? 'Edit User' : 'Add User'}
+                onPress={() => props.navigation.goBack()}
+                isTitleCenter={false}
+            />
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
                 <Center w="100%">
-                    <Box p="2" w="95%">
-                        <VStack space={3}>
-                            <FormControl isRequired isInvalid>
+                    <Box w="100%" maxW={layout.formMaxWidth} px="4" py="4">
+                        <Text style={globleStyles.sectionTitle}>
+                            {isEditMode ? 'Update user details' : 'Create a new buyer account'}
+                        </Text>
+                        <Text style={globleStyles.screenDescription}>
+                            {isEditMode
+                                ? 'Edit profile information for this user.'
+                                : 'Set up login credentials and profile details. The user can sign in immediately with the password you assign.'}
+                        </Text>
+
+                        <VStack space={4}>
+                            <FormControl isRequired isInvalid={!!error?.first_name}>
                                 <InputCard
+                                    label="First name"
                                     onChangeText={userFirstnameChange}
                                     blurOnSubmit={false}
                                     value={first_name}
                                     returnKey={"next"}
                                     secureEntry={false}
-                                    placeholder={"Enter First Name"} >
-                                    {/* <Entypo name="user" color={colors.GREY_7} size={20} /> */}
+                                    placeholder={"Enter first name"}
+                                >
                                     <MaterialIcons name="person" color={colors.GREY_7} size={20} />
                                 </InputCard>
-                                {error && error.first_name &&
+                                {error?.first_name && (
                                     <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
                                         {error.first_name}
                                     </FormControl.ErrorMessage>
-                                }
+                                )}
                             </FormControl>
-                            <FormControl isRequired isInvalid>
+
+                            <FormControl isRequired isInvalid={!!error?.last_name}>
                                 <InputCard
+                                    label="Last name"
                                     onChangeText={userLastnameChange}
                                     blurOnSubmit={false}
                                     value={last_name}
                                     returnKey={"next"}
                                     secureEntry={false}
-                                    placeholder={"Enter Last Name"} >
-                                    {/* <Entypo name="user" color={colors.GREY_7} size={20} /> */}
+                                    placeholder={"Enter last name"}
+                                >
                                     <MaterialIcons name="person" color={colors.GREY_7} size={20} />
                                 </InputCard>
-                                {error && error.last_name &&
+                                {error?.last_name && (
                                     <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
                                         {error.last_name}
                                     </FormControl.ErrorMessage>
-                                }
+                                )}
                             </FormControl>
-                            <FormControl isRequired isInvalid>
+
+                            <FormControl isRequired isInvalid={!!error?.email}>
                                 <InputCard
+                                    label="Email"
                                     onChangeText={userEmailChange}
                                     blurOnSubmit={false}
                                     value={email}
                                     returnKey={"next"}
                                     keyboardType={"email-address"}
                                     secureEntry={false}
-                                    placeholder={"Enter Email Address"} >
+                                    placeholder={"Enter email address"}
+                                    editable={!isEditMode}
+                                >
                                     <Entypo name="email" color={colors.GREY_7} size={20} />
                                 </InputCard>
-                                {error && error.email &&
+                                {error?.email && (
                                     <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
                                         {error.email}
                                     </FormControl.ErrorMessage>
-                                }
+                                )}
                             </FormControl>
-                            <FormControl isRequired isInvalid>
+
+                            {!isEditMode && (
+                                <>
+                                    <FormControl isRequired isInvalid={!!error?.password}>
+                                        <InputCard
+                                            label="Password"
+                                            onChangeText={setPassword}
+                                            blurOnSubmit={false}
+                                            value={password}
+                                            returnKey={"next"}
+                                            secureEntry={!showPassword}
+                                            placeholder={"Set password (min. 6 characters)"}
+                                            rightIcon={<Entypo name={!showPassword ? "eye-with-line" : "eye"} color={colors.GREY_7} size={20} />}
+                                            onPressRightIcon={() => setShowPassword(!showPassword)}
+                                        >
+                                            <Entypo name="lock" color={colors.GREY_7} size={20} />
+                                        </InputCard>
+                                        {error?.password && (
+                                            <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
+                                                {error.password}
+                                            </FormControl.ErrorMessage>
+                                        )}
+                                    </FormControl>
+
+                                    <FormControl isRequired isInvalid={!!error?.confirmPassword}>
+                                        <InputCard
+                                            label="Confirm password"
+                                            onChangeText={setConfirmPassword}
+                                            blurOnSubmit={false}
+                                            value={confirmPassword}
+                                            returnKey={"next"}
+                                            secureEntry={!showConfirmPassword}
+                                            placeholder={"Confirm password"}
+                                            rightIcon={<Entypo name={!showConfirmPassword ? "eye-with-line" : "eye"} color={colors.GREY_7} size={20} />}
+                                            onPressRightIcon={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        >
+                                            <Entypo name="lock" color={colors.GREY_7} size={20} />
+                                        </InputCard>
+                                        {error?.confirmPassword && (
+                                            <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
+                                                {error.confirmPassword}
+                                            </FormControl.ErrorMessage>
+                                        )}
+                                    </FormControl>
+                                </>
+                            )}
+
+                            <FormControl isRequired isInvalid={!!error?.mobile_number}>
                                 <InputCard
+                                    label="Mobile number"
                                     onChangeText={userPhonenumberChange}
                                     blurOnSubmit={false}
                                     value={mobile_number}
@@ -159,52 +262,60 @@ function AddUser(props) {
                                     keyboardType={"phone-pad"}
                                     secureEntry={false}
                                     maxLength={10}
-                                    placeholder={"Enter Mobile Number"} >
+                                    placeholder={"Enter mobile number"}
+                                >
                                     <Entypo name="mobile" color={colors.GREY_7} size={20} />
                                 </InputCard>
-                                {error && error.mobile_number &&
+                                {error?.mobile_number && (
                                     <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
                                         {error.mobile_number}
                                     </FormControl.ErrorMessage>
-                                }
+                                )}
                             </FormControl>
-                            <FormControl isRequired isInvalid>
+
+                            <FormControl isRequired isInvalid={!!error?.company_name}>
                                 <InputCard
+                                    label="Company name"
                                     onChangeText={userCompanyNameChange}
                                     blurOnSubmit={false}
                                     value={company_name}
                                     returnKey={"next"}
                                     secureEntry={false}
-                                    placeholder={"Enter Company Name"} >
+                                    placeholder={"Enter company name"}
+                                >
                                     <MaterialIcons name="business" color={colors.GREY_7} size={20} />
                                 </InputCard>
-                                {error && error.company_name &&
+                                {error?.company_name && (
                                     <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
                                         {error.company_name}
                                     </FormControl.ErrorMessage>
-                                }
+                                )}
                             </FormControl>
-                            <FormControl isRequired isInvalid>
+
+                            <FormControl isRequired isInvalid={!!error?.gst_number}>
                                 <InputCard
+                                    label="GST number"
                                     onChangeText={userGSTNumberChange}
                                     blurOnSubmit={false}
                                     value={gst_number}
                                     returnKey={"next"}
-                                    // keyboardType={"email-address"}
                                     secureEntry={!showGST}
-                                    placeholder={"Enter GST Number"}
+                                    placeholder={"Enter GST number"}
                                     rightIcon={<Entypo name={!showGST ? "eye-with-line" : "eye"} color={colors.GREY_7} size={20} />}
-                                    onPressRightIcon={() => setShowGST(!showGST)}>
+                                    onPressRightIcon={() => setShowGST(!showGST)}
+                                >
                                     <Entypo name="calculator" color={colors.GREY_7} size={20} />
                                 </InputCard>
-                                {error && error.gst_number &&
+                                {error?.gst_number && (
                                     <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
                                         {error.gst_number}
                                     </FormControl.ErrorMessage>
-                                }
+                                )}
                             </FormControl>
-                            <MaterialButtonDark onPress={() => _attemptSubmit()}>Edit User</MaterialButtonDark>
 
+                            <MaterialButtonDark onPress={_attemptSubmit}>
+                                {isEditMode ? 'Save Changes' : 'Create User'}
+                            </MaterialButtonDark>
                         </VStack>
                     </Box>
                 </Center>
@@ -214,34 +325,24 @@ function AddUser(props) {
     );
 }
 
-const mapStateToProps = (state) => {
-    // console.log(state.auth.phonenumber);
-    return {
-        // nav: state.nav,
-        first_name: state.usersdata.first_name,
-        last_name: state.usersdata.last_name,
-        email: state.usersdata.email,
-        mobile_number: state.usersdata.mobile_number,
-        company_name: state.usersdata.company_name,
-        gst_number: state.usersdata.gst_number,
-        loading: state.usersdata.loading
-    }
-};
-export default connect(mapStateToProps, actions)(AddUser)
+const mapStateToProps = (state) => ({
+    first_name: state.usersdata.first_name,
+    last_name: state.usersdata.last_name,
+    email: state.usersdata.email,
+    mobile_number: state.usersdata.mobile_number,
+    company_name: state.usersdata.company_name,
+    gst_number: state.usersdata.gst_number,
+    loading: state.usersdata.loading,
+    success: state.usersdata.success,
+    success_status: state.usersdata.success_status,
+    error: state.usersdata.error,
+});
+
+export default connect(mapStateToProps, actions)(AddUser);
 
 const styles = StyleSheet.create({
-    mainView: {
-        flex: 1,
-        backgroundColor: colors.WHITE,
-        //marginTop: StatusBar.currentHeight,
-        justifyContent: 'center'
+    scrollContent: {
+        flexGrow: 1,
+        paddingBottom: 40,
     },
-    title: {
-        fontFamily: 'Sofia-Pro-Bold',
-        fontSize: width * 0.045,
-        color: colors.DARK_BLUE,
-        textAlign: 'center',
-        textDecorationLine: "underline",
-        marginVertical: 5
-    }
-})
+});

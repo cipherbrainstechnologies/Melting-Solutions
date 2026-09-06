@@ -1,9 +1,11 @@
-import { ADD_USERS_DATA, ADD_USERS_FAILED, ADD_USERS_SUCCESS, FETCH_ALL_USERS, FETCH_ALL_USERS_FAILED, FETCH_ALL_USERS_SUCCESS, USER_COMPANYNAME, USER_EMAIL, USER_FIRSTNAME, USER_GSTNUMBER, USER_LASTNAME, USER_MOBILENUMBER, USER_RESET, USER_SEARCH_DATA } from "../store/type";
+import { ADD_USERS_DATA, ADD_USERS_FAILED, ADD_USERS_SUCCESS, CLEAR_USER_ERROR, FETCH_ALL_USERS, FETCH_ALL_USERS_FAILED, FETCH_ALL_USERS_SUCCESS, USER_COMPANYNAME, USER_EMAIL, USER_FIRSTNAME, USER_GSTNUMBER, USER_LASTNAME, USER_MOBILENUMBER, USER_RESET, USER_SEARCH_DATA } from "../store/type";
 
 export const INITIAL_STATE = {
     users: null,
     usersMirror: null,
     loading: false,
+    success: null,
+    success_status: null,
     error: {
         flag: false,
         msg: null
@@ -49,15 +51,33 @@ export const usersreducer = (state = INITIAL_STATE, action) => {
         case ADD_USERS_SUCCESS:
             return {
                 ...state,
-                loading: false
+                loading: false,
+                success: 'success',
+                success_status: action.payload,
+                error: {
+                    flag: false,
+                    msg: null
+                },
             };
         case ADD_USERS_FAILED:
             return {
                 ...state,
                 loading: false,
+                success: null,
+                success_status: null,
                 error: {
                     flag: true,
                     msg: action.payload
+                }
+            };
+        case CLEAR_USER_ERROR:
+            return {
+                ...state,
+                success: null,
+                success_status: null,
+                error: {
+                    flag: false,
+                    msg: null
                 }
             };
         // case ADD_USERS_DATA:
@@ -75,6 +95,8 @@ export const usersreducer = (state = INITIAL_STATE, action) => {
                 company_name: "",
                 gst_number: "",
                 loading: false,
+                success: null,
+                success_status: null,
             };
         case USER_FIRSTNAME:
             return {

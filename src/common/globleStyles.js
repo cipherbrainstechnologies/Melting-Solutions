@@ -4,7 +4,7 @@ import {
   Platform
 } from 'react-native';
 import { FontBold, FontLight, FontMedium, FontRegular, FontSemiBold } from './Constants';
-import { colors } from './theme';
+import { colors, typography, spacing, radii } from './theme';
 
 export const { width, height } = Dimensions.get("window");
 export const { colorApp } = colors;
@@ -15,24 +15,24 @@ const globleStyles = StyleSheet.create({
   headerView: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 50,
+    minHeight: 56,
     marginHorizontal: 0,
-    paddingHorizontal: 10,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     backgroundColor: colors.WHITE,
-    // borderBottomWidth: 1,
-    // borderBottomColor: colors.GREY_4
+    borderBottomWidth: 1,
+    borderBottomColor: colors.BORDER,
   },
   headerView1: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.GREY_4
+    borderBottomColor: colors.BORDER
   },
   headerText: {
-    color: colors.BLACK,
-    fontSize: 22,
-    fontFamily: FontBold
+    ...typography.title,
+    fontSize: width >= 900 ? 22 : 20,
   },
   centerTitleView: { alignSelf: 'center', flex: 1, alignItems: 'center', position: 'absolute', left: 1, right: 1 },
-  LeftTitleView: { alignSelf: 'center', flex: 1, alignItems: 'flex-start', left: 10 },
+  LeftTitleView: { alignSelf: 'center', flex: 1, alignItems: 'flex-start', marginLeft: spacing.sm },
 
 
   mainView: {
@@ -41,27 +41,35 @@ const globleStyles = StyleSheet.create({
   },
   mainViewWithColor: {
     flex: 1,
-    backgroundColor: colors.PRIMARY_LIGHT,
+    backgroundColor: colors.SURFACE,
   },
   subMainView: {
-    marginHorizontal: 10,
-    paddingBottom: 103
+    marginHorizontal: spacing.md,
+    paddingBottom: 120,
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
   },
   subHeader: {
-    fontSize: 25,
-    fontFamily: FontBold,
-    color: colors.BLACK
+    ...typography.display,
+    fontSize: width >= 900 ? 28 : 24,
+    marginBottom: spacing.xs,
   },
   subHeaderCenter: {
-    fontSize: 25,
-    fontFamily: FontBold,
+    ...typography.display,
     alignSelf: 'center'
   },
   normalText: {
-    fontSize: 14,
-    fontFamily: FontRegular,
-    lineHeight: 18,
-    color: colors.BLACK
+    ...typography.body,
+    color: colors.TEXT_SECONDARY,
+  },
+  sectionTitle: {
+    ...typography.heading,
+    marginBottom: spacing.sm,
+  },
+  screenDescription: {
+    ...typography.caption,
+    marginBottom: spacing.lg,
   },
   normalTextWhite: {
     fontSize: 12,
@@ -200,14 +208,42 @@ const globleStyles = StyleSheet.create({
     borderRadius: 5
   },
   cardTextLabel: {
-    fontSize: 13,
-    fontFamily: FontMedium,
-    color: colors.GREY_7,
+    ...typography.label,
+    fontSize: 11,
   },
   cardTextValue: {
+    ...typography.bodyMedium,
     fontSize: 14,
-    fontFamily: FontMedium,
-    color: colors.BLACK,
+  },
+  userCard: {
+    borderColor: colors.BORDER,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    backgroundColor: colors.WHITE,
+    padding: spacing.sm,
+    marginVertical: spacing.xs,
+    shadowColor: colors.BLACK,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  formSection: {
+    marginBottom: spacing.lg,
+  },
+  logoutButton: {
+    marginTop: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.LIGHT_RED,
+    backgroundColor: colors.WHITE,
+    borderRadius: radii.sm,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutButtonText: {
+    ...typography.bodyMedium,
+    color: colors.LIGHT_RED,
   },
   errorText: {
     color: colors.RED,

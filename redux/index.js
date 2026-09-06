@@ -10,7 +10,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/storage';
-import { editUser, fetchUsers, onDeleteUser, onUserStatusChange, setEditUserDataToState } from "./actions/useractions";
+import { adminCreateUser, clearUserError, editUser, fetchUsers, onDeleteUser, onUserStatusChange, resetUserForm, setEditUserDataToState } from "./actions/useractions";
 import { addProduct, clearProductError, editProduct, fetchProducts, onDeleteProduct, onProductStatusChange, setEditProductDataToState } from "./actions/productactions";
 import { addToCart, clearCartError, fetchCartCount, fetchCarts, submitForQuote } from "./actions/cartactions";
 import { clearSaveAddressError, deleteSavedAddress, fetchSavedAddress, saveAddress, selectSavedAddress } from "./actions/searchlocationactions";
@@ -52,8 +52,11 @@ const FirebaseProvider = ({ config, appcat, children }) => {
             clearLoginError: () => (dispatch) => clearLoginError()(dispatch)(firebaseContext),
             signOut: () => (dispatch) => signOut()(dispatch)(firebaseContext),
             fetchUsers: () => (dispatch) => fetchUsers()(dispatch)(firebaseContext),
+            adminCreateUser: (password) => (dispatch) => adminCreateUser(password)(dispatch)(firebaseContext),
             editUser: (uid) => (dispatch) => editUser(uid)(dispatch)(firebaseContext),
             setEditUserDataToState: (data) => (dispatch) => setEditUserDataToState(data)(dispatch),
+            resetUserForm: () => (dispatch) => dispatch(resetUserForm()),
+            clearUserError: () => (dispatch) => dispatch(clearUserError()),
             onDeleteUser: (uid) => (dispatch) => onDeleteUser(uid)(dispatch)(firebaseContext),
             onUserStatusChange: (uid, status) => (dispatch) => onUserStatusChange(uid, status)(dispatch)(firebaseContext),
             fetchProducts: (status) => (dispatch) => fetchProducts(status)(dispatch)(firebaseContext),

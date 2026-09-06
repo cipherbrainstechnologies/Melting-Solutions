@@ -1,28 +1,24 @@
-import { Box, Button, Center, FormControl, Heading, HStack, Input, Link, Stack, StatusBar, VStack, WarningOutlineIcon } from 'native-base';
+import { Box, Center, FormControl, VStack, WarningOutlineIcon, StatusBar } from 'native-base';
 import React, { useContext, useEffect, useState } from 'react';
 import {
-    StyleSheet,
     View,
     Text,
     TouchableOpacity,
-    Dimensions,
-    Image,
-    ScrollView,
-    Linking
 } from 'react-native';
 import { colors } from '../common/theme';
+import { layout } from '../common/responsive';
 import globleStyles from '../common/globleStyles';
 import Header from '../components/Header';
+import ScreenContainer from '../components/ScreenContainer';
 import { InputCard } from '../components/InputCard';
 import { Entypo } from 'react-native-vector-icons';
 import MaterialButtonDark from '../components/MaterialButtonDark';
-import { FontSemiBold, not_logged_in } from '../common/Constants';
-var { width } = Dimensions.get('window');
 import { connect, useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../redux/actions/authactions';
 import { showToastError, validateEmail } from '../../redux/actions/Validation';
 import { FirebaseContext } from '../../redux';
 import Spinner from '../components/Spinner';
+import { not_logged_in } from '../common/Constants';
 
 function Login(props) {
     const { api } = useContext(FirebaseContext);
@@ -41,7 +37,6 @@ function Login(props) {
         }
     }, [auth.error]);
 
-    // Navigate to AuthLoading screen after successful login
     useEffect(() => {
         if (!auth.loading && auth.info && auth.info.uid) {
             props.navigation.navigate('AuthLoading');
@@ -57,7 +52,7 @@ function Login(props) {
             setError('Password must be at least 6 characters');
             return;
         }
-        
+
         setError(null);
         dispatch(emailPasswordSignIn(email, password));
     };
@@ -69,67 +64,69 @@ function Login(props) {
     return (
         <View style={globleStyles.mainView}>
             <StatusBar backgroundColor={colors.WHITE} barStyle={'dark-content'} />
-            <Header title={'Login'} isLeftIconHide />
-            
-            <Center w="100%">
-                <Box safeArea p="2" py="8" w="95%" maxW="350">
-                    <Text style={globleStyles.subHeader}>Login Now</Text>
-                    <Text style={globleStyles.normalText}>
-                        Please enter your email and password to login
-                    </Text>
+            <Header title={'Sign in'} isLeftIconHide isTitleCenter={false} />
 
-                    <VStack space={3} mt="10">
-                        <FormControl isRequired isInvalid={!!error}>
-                            <InputCard
-                                onChangeText={setEmail}
-                                value={email}
-                                keyboardType="email-address"
-                                placeholder="Enter Email Address"
-                                autoCapitalize="none"
+            <ScreenContainer scroll maxWidth={layout.formMaxWidth} contentStyle={styles.content}>
+                <Center w="100%">
+                    <Box w="100%" py="6">
+                        <Text style={globleStyles.subHeader}>Welcome back</Text>
+                        <Text style={globleStyles.screenDescription}>
+                            Sign in with your email and password to continue.
+                        </Text>
+
+                        <VStack space={4} mt="6">
+                            <FormControl isRequired isInvalid={!!error}>
+                                <InputCard
+                                    label="Email"
+                                    onChangeText={setEmail}
+                                    value={email}
+                                    keyboardType="email-address"
+                                    placeholder="Enter email address"
+                                    autoCapitalize="none"
+                                >
+                                    <Entypo name="mail" color={colors.GREY_7} size={20} />
+                                </InputCard>
+
+                                <InputCard
+                                    label="Password"
+                                    onChangeText={setPassword}
+                                    value={password}
+                                    secureEntry={true}
+                                    placeholder="Enter password"
+                                >
+                                    <Entypo name="lock" color={colors.GREY_7} size={20} />
+                                </InputCard>
+
+                                {error && (
+                                    <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
+                                        {error}
+                                    </FormControl.ErrorMessage>
+                                )}
+                            </FormControl>
+
+                            <MaterialButtonDark onPress={_attemptLogin}>
+                                Sign in
+                            </MaterialButtonDark>
+
+                            <TouchableOpacity
+                                style={styles.linkButton}
+                                onPress={() => props.navigation.navigate('Register')}
                             >
-                                <Entypo name="mail" color="black" size={20} />
-                            </InputCard>
-                            
-                            <InputCard
-                                onChangeText={setPassword}
-                                value={password}
-                                secureEntry={true}
-                                placeholder="Enter Password"
+                                <Text style={styles.linkText}>
+                                    Don't have an account? <Text style={styles.linkTextBold}>Sign up</Text>
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.linkButton}
+                                onPress={() => props.navigation.navigate('ForgotPassword')}
                             >
-                                <Entypo name="lock" color="black" size={20} />
-                            </InputCard>
-                            
-                            {error && (
-                                <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-                                    {error}
-                                </FormControl.ErrorMessage>
-                            )}
-                        </FormControl>
-                        
-                        <MaterialButtonDark onPress={_attemptLogin}>
-                            Login
-                        </MaterialButtonDark>
-
-                        <TouchableOpacity 
-                            style={globleStyles.actionItem} 
-                            onPress={() => props.navigation.navigate('Register')}
-                        >
-                            <Text style={{ ...globleStyles.actionText, color: colors.PRIMARY_DARK }}>
-                                Don't have an account? Sign up
-                            </Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity 
-                            style={globleStyles.actionItem}
-                            onPress={() => props.navigation.navigate('ForgotPassword')}
-                        >
-                            <Text style={{ ...globleStyles.actionText, color: colors.PRIMARY_DARK }}>
-                                Forgot Password?
-                            </Text>
-                        </TouchableOpacity>
-                    </VStack>
-                </Box>
-            </Center>
+                                <Text style={styles.linkTextBold}>Forgot password?</Text>
+                            </TouchableOpacity>
+                        </VStack>
+                    </Box>
+                </Center>
+            </ScreenContainer>
             {showLoader()}
         </View>
     );
@@ -140,16 +137,24 @@ const mapStateToProps = (state) => ({
     error: state.auth.error
 });
 
-export default connect(mapStateToProps, actions)(Login)
+export default connect(mapStateToProps, actions)(Login);
 
-const styles = StyleSheet.create({
-
-    // title: {
-    //     fontFamily: 'Sofia-Pro-Bold',
-    //     fontSize: width * 0.045,
-    //     color: colors.DARK_BLUE,
-    //     textAlign: 'center',
-    //     textDecorationLine: "underline",
-    //     marginVertical: 5
-    // }
-})
+const styles = {
+    content: {
+        justifyContent: 'center',
+        paddingTop: 24,
+    },
+    linkButton: {
+        alignSelf: 'center',
+        paddingVertical: 8,
+    },
+    linkText: {
+        ...globleStyles.normalText,
+        textAlign: 'center',
+    },
+    linkTextBold: {
+        ...globleStyles.normalText,
+        color: colors.PRIMARY_DARK,
+        fontFamily: 'Sofia-Pro-SemiBold',
+    },
+};

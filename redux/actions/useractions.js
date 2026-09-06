@@ -1,6 +1,7 @@
 import store from '../store/store';
-import { not_logged_in } from "../../src/common/Constants";
-import { ADD_USERS_FAILED, ADD_USERS_SUCCESS, FETCH_ALL_USERS, FETCH_ALL_USERS_FAILED, FETCH_ALL_USERS_SUCCESS, USER_COMPANYNAME, USER_EMAIL, USER_FIRSTNAME, USER_GSTNUMBER, USER_LASTNAME, USER_MOBILENUMBER, USER_RESET, USER_SEARCH_DATA } from '../store/type';
+import firebase from 'firebase/app';
+import 'firebase/auth';
+import { ADD_USERS_FAILED, ADD_USERS_SUCCESS, CLEAR_USER_ERROR, FETCH_ALL_USERS, FETCH_ALL_USERS_FAILED, FETCH_ALL_USERS_SUCCESS, USER_COMPANYNAME, USER_EMAIL, USER_FIRSTNAME, USER_GSTNUMBER, USER_LASTNAME, USER_MOBILENUMBER, USER_RESET, USER_SEARCH_DATA } from '../store/type';
 
 
 
@@ -59,12 +60,8 @@ export const editUser = (uid) => (dispatch) => (firebase) => {
   }).then(() => {
     dispatch({
       type: ADD_USERS_SUCCESS,
-      payload: null
+      payload: 'edit_success'
     });
-    // dispatch({
-    //   type: USER_RESET,
-    //   payload: null
-    // });
   }).catch(error => {
     dispatch({
       type: ADD_USERS_FAILED,
@@ -72,6 +69,69 @@ export const editUser = (uid) => (dispatch) => (firebase) => {
     });
   });
 }
+
+const getSecondaryAuth = (config) => {
+  let secondaryApp;
+  try {
+    secondaryApp = firebase.app('AdminSecondary');
+  } catch (error) {
+    secondaryApp = firebase.initializeApp(config, 'AdminSecondary');
+  }
+  return secondaryApp.auth();
+};
+
+export const adminCreateUser = (password) => (dispatch) => async (firebaseContext) => {
+  const { usersCollection, config } = firebaseContext;
+  const state = store.getState();
+  const { email, first_name, last_name, mobile_number, company_name, gst_number } = state.usersdata;
+
+  dispatch({
+    type: FETCH_ALL_USERS,
+    payload: null
+  });
+
+  try {
+    const secondaryAuth = getSecondaryAuth(config);
+    const userCredential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+
+    const newUserData = {
+      uid: user.uid,
+      email,
+      firstname: first_name,
+      lastname: last_name,
+      phoneNumber: mobile_number,
+      companyname: company_name,
+      gstnumber: gst_number,
+      usertype: 'user',
+      profileStatus: true,
+      status: 'active',
+      isdelete: 'no',
+      createDate: new Date()
+    };
+
+    await usersCollection.doc(user.uid).set(newUserData);
+    await secondaryAuth.signOut();
+
+    dispatch({
+      type: ADD_USERS_SUCCESS,
+      payload: 'create_success'
+    });
+    dispatch({
+      type: USER_RESET,
+      payload: null
+    });
+  } catch (error) {
+    dispatch({
+      type: ADD_USERS_FAILED,
+      payload: error.code ? `${error.code}: ${error.message}` : error.message,
+    });
+  }
+};
+
+export const resetUserForm = () => ({ type: USER_RESET, payload: null });
+
+export const clearUserError = () => ({ type: CLEAR_USER_ERROR, payload: null });
 
 export const userFirstnameChange = (data) => { return { type: USER_FIRSTNAME, payload: data } };
 export const userLastnameChange = (data) => { return { type: USER_LASTNAME, payload: data } };

@@ -99,8 +99,9 @@ Users/{userId} {
 - Requires profile completion before accessing main app
 
 ### Admin Account
-- Must be created manually in Firestore with `usertype: 'admin'`
+- Can be created manually in Firestore with `usertype: 'admin'`
 - Or promoted through an existing admin account
+- Can create buyer accounts from **Users → Add User** with email + password (secondary Firebase Auth keeps admin session)
 - Can create products, manage users, send quotes
 
 ## Screen Components
@@ -138,11 +139,8 @@ Accessed via toggle on HomeAdmin, provides access to:
 - `profileStatus: true` → Access to respective dashboard
 
 ### Profile Screen Behavior
-```100:100:src/screens/Profile.js
-                isRightIconHide={auth.info.usertype == "user" ? false : true}
-```
-- Regular users see logout button
-- Admins don't (logout handled via drawer)
+- All users (buyers and admins) see a **Sign out** button in the profile header and a dedicated logout action below the form
+- Admin drawer logout remains available when drawer navigation is enabled
 
 ## Best Practices
 

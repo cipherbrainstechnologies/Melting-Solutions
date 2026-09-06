@@ -5,26 +5,24 @@ import {
     View,
     Text,
     FlatList,
-    Dimensions,
     TouchableOpacity,
-    Linking
 } from 'react-native';
-import { Entypo } from 'react-native-vector-icons';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { FirebaseContext } from '../../redux';
 import globleStyles from '../common/globleStyles';
 import { colors } from '../common/theme';
+import { useWindowWidth } from '../common/responsive';
 import * as actions from '../../redux/actions/homeactions';
 import Spinner from '../components/Spinner';
 import { STATUS_ORDER_COMPLETED, STATUS_QUOTE_REQUESTED, STATUS_QUOTE_SEND } from '../common/Constants';
-import { getnumbertoken, getordernumber } from '../../redux/actions/Validation';
-var { width } = Dimensions.get('window');
 
 function HomeAdmin(props) {
 
     const { api } = useContext(FirebaseContext);
     const dispatch = useDispatch();
     const auth = useSelector(state => state.auth);
+    const { width, isDesktop } = useWindowWidth();
+    const cardWidth = isDesktop ? (width - 80) / 3 : width / 2.25;
 
     useEffect(() => {
         Promise.all([
@@ -42,18 +40,18 @@ function HomeAdmin(props) {
         }
     }
 
-    const renderData = ({ item, index }) => {
+    const renderData = ({ item }) => {
         return <TouchableOpacity
             activeOpacity={0.9}
-            style={styles.mainCard}
+            style={[styles.mainCard, { width: cardWidth, height: cardWidth * 0.95 }]}
             onPress={() => {
                 if (item.route) {
                     props.navigation.navigate(item.route);
                 }
             }}
         >
-            <VStack justifyContent="space-between" flex={1} marginY="1.5" zIndex={99999999} overflow="hidden" >
-                <Text style={{ ...globleStyles.subHeader, fontSize: 40, color: colors.GREY_9, paddingHorizontal: 10 }}>{item.count}</Text>
+            <VStack justifyContent="space-between" flex={1} marginY="1.5" overflow="hidden">
+                <Text style={styles.countText}>{item.count}</Text>
                 <Image
                     source={item.icon}
                     style={styles.box_icon}
@@ -65,29 +63,25 @@ function HomeAdmin(props) {
 
     return (
         <View style={globleStyles.mainViewWithColor}>
-            <StatusBar backgroundColor={colors.PRIMARY_LIGHT} barStyle={'dark-content'} />
-            <Box safeAreaTop bg={colors.PRIMARY_LIGHT} pt="2" />
+            <StatusBar backgroundColor={colors.SURFACE} barStyle={'dark-content'} />
+            <Box safeAreaTop bg={colors.SURFACE} pt="2" />
             <View style={globleStyles.subMainView}>
-
-                <HStack justifyContent='space-between'>
-
-                    <TouchableOpacity activeOpacity={0.8} onPress={() => { 
-                        // Use bottom tabs navigation instead of drawer
-                        props.navigation.navigate('Users');
-                    }}>
-                        <View style={globleStyles.toggleIconView}>
-                            <Entypo name="menu" color={colors.DARK_BLUE} size={30} />
-                        </View>
-                    </TouchableOpacity>
+                <HStack justifyContent='space-between' alignItems="center" mb="4">
+                    <VStack flex={1}>
+                        <Text style={globleStyles.sectionTitle}>Dashboard</Text>
+                        <Text style={globleStyles.screenDescription}>
+                            Overview of users, products, quotes, and orders.
+                        </Text>
+                    </VStack>
                     {auth.info.image ?
                         <Image
                             source={{ uri: auth.info.image }}
-                            style={{ width: 45, height: 45, borderRadius: 10 }}
+                            style={{ width: 48, height: 48, borderRadius: 12 }}
                         />
                         :
                         <Image
                             source={require('../../assets/icon.png')}
-                            style={{ width: 45, height: 45, borderRadius: 10 }}
+                            style={{ width: 48, height: 48, borderRadius: 12 }}
                         />
                     }
                 </HStack>
@@ -136,7 +130,7 @@ function HomeAdmin(props) {
                         backgroundColor: colors.fullTransparent,
                         alignSelf: 'center',
                     }}
-                    numColumns={2}
+                    numColumns={isDesktop ? 3 : 2}
                     fadingEdgeLength={50}
                     contentContainerStyle={
                         {
@@ -165,52 +159,41 @@ const mapStateToProps = (state) => {
 export default connect(mapStateToProps, actions)(HomeAdmin)
 
 const styles = StyleSheet.create({
-    mainView: {
-        flex: 1,
-        backgroundColor: colors.WHITE,
-        //marginTop: StatusBar.currentHeight,
-    },
-    title: {
-        ...globleStyles.fontBold,
-        fontSize: width * 0.045,
-        color: colors.DARK_BLUE,
-        textAlign: 'center',
-        textDecorationLine: "underline",
-        marginVertical: 5
-    },
-    box_icon: {
-        width: 90,
-        height: 90,
-        position: 'absolute',
-        right: -20,
-        zIndex: -99999999
-    },
-    text: {
-        fontSize: 25,
-        ...globleStyles.fontMedium,
-        color: colors.BLACK,
+    countText: {
+        ...globleStyles.subHeader,
+        fontSize: 36,
+        color: colors.GREY_9,
         paddingHorizontal: 10,
     },
+    box_icon: {
+        width: 80,
+        height: 80,
+        position: 'absolute',
+        right: -16,
+        opacity: 0.9,
+    },
+    text: {
+        fontSize: 18,
+        ...globleStyles.fontMedium,
+        color: colors.TEXT_PRIMARY,
+        paddingHorizontal: 10,
+        paddingBottom: 4,
+    },
     mainCard: {
-        width: Dimensions.get('window').width / 2.25,
-        height: Dimensions.get('window').width / 2.25,
         flexDirection: 'column',
         marginHorizontal: 5,
         marginTop: 5,
         marginBottom: 5,
-        paddingTop: 5,
-        paddingBottom: 5,
-        backgroundColor: '#fff',
-        borderColor: '#fff',
+        paddingTop: 8,
+        paddingBottom: 8,
+        backgroundColor: colors.WHITE,
+        borderColor: colors.BORDER,
         borderWidth: 1,
-        borderRadius: 15,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.32,
-        shadowRadius: 5.46,
-        elevation: 4,
+        borderRadius: 16,
+        shadowColor: colors.BLACK,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
     },
 })
