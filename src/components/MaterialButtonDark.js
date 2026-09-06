@@ -1,11 +1,16 @@
 import React, { Component } from "react";
 import { StyleSheet, TouchableOpacity, Text } from "react-native";
 import globleStyles from "../common/globleStyles";
-import { colors } from '../common/theme';
+import { colors, typography, radii } from '../common/theme';
 
 function MaterialButtonDark(props) {
   return (
-    <TouchableOpacity style={[styles.container, props.style]} onPress={() => { props.onPress() }} disabled={props.disabled}>
+    <TouchableOpacity
+      style={[styles.container, props.disabled && styles.disabled, props.style]}
+      onPress={() => { props.onPress && props.onPress(); }}
+      disabled={props.disabled}
+      activeOpacity={0.85}
+    >
       <Text style={styles.caption}>{props.children}</Text>
     </TouchableOpacity>
   );
@@ -13,31 +18,26 @@ function MaterialButtonDark(props) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 40,
+    minHeight: 48,
     backgroundColor: colors.PRIMARY_DARK,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 10,
-    paddingRight: 16,
-    paddingLeft: 16,
-    elevation: 2,
-    minWidth: 88,
-    borderRadius: 5,
-    shadowOffset: {
-      height: 1,
-      width: 0
-    },
+    marginVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: radii.sm,
     shadowColor: colors.BLACK,
-    shadowOpacity: 0.35,
-    shadowRadius: 5
+    shadowOffset: { height: 2, width: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  disabled: {
+    opacity: 0.6,
   },
   caption: {
-    color: colors.WHITE,
-    ...globleStyles.fontSemiBold,
-    fontSize: 15,
-    position: 'absolute',
-    paddingBottom: 3
+    ...typography.button,
+    position: 'relative',
   }
 });
 

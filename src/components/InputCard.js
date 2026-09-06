@@ -10,7 +10,7 @@ import {
   Platform
 } from 'react-native';
 import globleStyles from '../common/globleStyles';
-import { colors } from '../common/theme';
+import { colors, typography, radii } from '../common/theme';
 
 class InputCard extends Component {
   render() {
@@ -58,36 +58,31 @@ const inputCardStyle = StyleSheet.create({
   inputCardItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 5,
+    marginTop: 4,
     marginHorizontal: 0,
     borderWidth: 1,
-    borderColor: colors.GREY_4,
-    borderRadius: 5,
-    paddingLeft: 10
+    borderColor: colors.BORDER,
+    borderRadius: radii.sm,
+    paddingLeft: 12,
+    backgroundColor: colors.WHITE,
+    minHeight: 48,
   },
-  // inputCardIcon: {
-  //   width: 20,
-  //   height: 20,
-  //   marginHorizontal: 15,
-  //   marginVertical: 7,
-  //   resizeMode: "contain"
-  // },
   inputCardItemLabel: {
-    fontSize: 14,
-    paddingBottom: 5,
-    color: colors.BLACK,
-    textTransform: 'capitalize'
+    ...typography.label,
+    paddingBottom: 6,
+    color: colors.TEXT_SECONDARY,
+    textTransform: 'none',
+    fontSize: 13,
   },
   inputCardInput: {
-    // marginTop: 5,
     paddingBottom: 2,
-    fontSize: 16,
+    fontSize: 15,
     width: "100%",
-    color: colors.BLACK,
-    height: Platform.OS == 'ios' ? 35 : 45,
+    color: colors.TEXT_PRIMARY,
+    height: Platform.OS == 'ios' ? 40 : 48,
     paddingLeft: 10,
     textAlignVertical: 'center',
-    // backgroundColor:'red'
+    fontFamily: typography.body.fontFamily,
   },
   textArea: {
     height: 150,
