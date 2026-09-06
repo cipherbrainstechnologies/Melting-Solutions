@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import { StyleSheet, Text, View, LogBox, ActivityIndicator, Platform } from 'react-native';
+import { StyleSheet, View, LogBox, ActivityIndicator, Platform, Image, Text } from 'react-native';
 import { Provider } from 'react-redux'
 import { FirebaseProvider, store } from './redux';
 import AppContainer from './src/navigation/AppNavigator';
@@ -10,6 +10,7 @@ import { FirebaseConfig } from './src/common/FirebaseConfig';
 import { NativeBaseProvider } from 'native-base';
 import AppCommon from './AppCommon';
 import NavigationService from './src/navigation/NavigationService';
+import { colors, typography } from './src/common/theme';
 
 if (Platform.OS !== 'web') {
   try {
@@ -114,8 +115,10 @@ export default function App() {
       </Provider >
       :
       <View style={styles.container}>
-        <ActivityIndicator />
-        <Text style={{ paddingBottom: 100 }}>{updateMsg}</Text>
+        <Image source={require('./assets/icon.png')} style={styles.logo} />
+        <Text style={styles.brand}>Melting Solution</Text>
+        <ActivityIndicator size="large" color={colors.PRIMARY_DARK} style={styles.loader} />
+        <Text style={styles.loadingText}>{updateMsg}</Text>
       </View>
   );
 }
@@ -123,8 +126,25 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.SURFACE,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  logo: {
+    width: 72,
+    height: 72,
+    borderRadius: 18,
+    marginBottom: 16,
+  },
+  brand: {
+    ...typography.title,
+    marginBottom: 24,
+  },
+  loader: {
+    marginBottom: 12,
+  },
+  loadingText: {
+    ...typography.caption,
   },
 });

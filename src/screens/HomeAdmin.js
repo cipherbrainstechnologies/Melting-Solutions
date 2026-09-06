@@ -5,17 +5,19 @@ import {
     View,
     Text,
     ScrollView,
-    TouchableOpacity,
     Image,
     Dimensions,
 } from 'react-native';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { FirebaseContext } from '../../redux';
 import globleStyles from '../common/globleStyles';
-import { colors } from '../common/theme';
+import { colors, shadows, radii } from '../common/theme';
 import { useWindowWidth } from '../common/responsive';
 import * as actions from '../../redux/actions/homeactions';
 import Spinner from '../components/Spinner';
+import FadeInView from '../components/FadeInView';
+import PressableCard from '../components/PressableCard';
+import { motion } from '../common/animations';
 import { STATUS_ORDER_COMPLETED, STATUS_QUOTE_REQUESTED, STATUS_QUOTE_SEND } from '../common/Constants';
 
 const DASHBOARD_ITEMS = [
@@ -131,32 +133,32 @@ function HomeAdmin(props) {
                             const count = getCountForItem(item);
                             const isLastInRow = (index + 1) % columns === 0;
                             return (
-                                <TouchableOpacity
+                                <FadeInView
                                     key={item.key}
-                                    activeOpacity={0.9}
-                                    style={[
-                                        styles.mainCard,
-                                        {
-                                            width: cardWidth,
-                                            minHeight: cardHeight,
-                                            marginRight: isLastInRow ? 0 : horizontalGap,
-                                            marginBottom: horizontalGap,
-                                        },
-                                    ]}
-                                    onPress={() => {
-                                        if (item.route) {
-                                            props.navigation.navigate(item.route);
-                                        }
+                                    delay={index * motion.stagger}
+                                    style={{
+                                        width: cardWidth,
+                                        marginRight: isLastInRow ? 0 : horizontalGap,
+                                        marginBottom: horizontalGap,
                                     }}
                                 >
-                                    <View style={styles.cardContent}>
-                                        {count !== null && (
-                                            <Text style={styles.countText}>{count}</Text>
-                                        )}
-                                        <Image source={item.icon} style={styles.boxIcon} resizeMode="contain" />
-                                        <Text style={styles.cardTitle}>{item.title}</Text>
-                                    </View>
-                                </TouchableOpacity>
+                                    <PressableCard
+                                        onPress={() => item.route && props.navigation.navigate(item.route)}
+                                        style={[
+                                            styles.mainCard,
+                                            { width: cardWidth, minHeight: cardHeight },
+                                        ]}
+                                        accessibilityLabel={item.title}
+                                    >
+                                        <View style={styles.cardContent}>
+                                            {count !== null && (
+                                                <Text style={styles.countText}>{count}</Text>
+                                            )}
+                                            <Image source={item.icon} style={styles.boxIcon} resizeMode="contain" />
+                                            <Text style={styles.cardTitle}>{item.title}</Text>
+                                        </View>
+                                    </PressableCard>
+                                </FadeInView>
                             );
                         })}
                     </View>
@@ -203,15 +205,11 @@ const styles = StyleSheet.create({
         backgroundColor: colors.WHITE,
         borderColor: colors.BORDER,
         borderWidth: 1,
-        borderRadius: 16,
+        borderRadius: radii.lg,
         paddingTop: 10,
         paddingBottom: 10,
-        shadowColor: colors.BLACK,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
         overflow: 'hidden',
+        ...shadows.card,
     },
     cardContent: {
         flex: 1,

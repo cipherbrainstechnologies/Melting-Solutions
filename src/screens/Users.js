@@ -17,6 +17,8 @@ import { Entypo, Ionicons } from 'react-native-vector-icons';
 import { FirebaseContext } from '../../redux';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import Spinner from '../components/Spinner';
+import FadeInView from '../components/FadeInView';
+import { motion } from '../common/animations';
 import * as actions from '../../redux/actions/useractions';
 import { showToastError } from '../../redux/actions/Validation';
 
@@ -58,8 +60,9 @@ function Users(props) {
         dispatch(api.onDeleteUser(deleteModelData.uid));
     };
 
-    const renderItem1 = ({ item }) => {
+    const renderItem1 = ({ item, index }) => {
         return (
+            <FadeInView delay={(index || 0) * motion.stagger}>
             <HStack style={globleStyles.userCard}>
                 {item.image ? (
                     <Image
@@ -130,6 +133,7 @@ function Users(props) {
                     </TouchableOpacity>
                 </VStack>
             </HStack>
+            </FadeInView>
         );
     };
 

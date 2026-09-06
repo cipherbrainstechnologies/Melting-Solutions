@@ -1,175 +1,200 @@
-import { Badge, Box, Flex, HStack, Pressable, Image, AspectRatio, StatusBar, VStack } from 'native-base';
-import React, { useContext, useEffect, useState } from 'react';
+import { Box, Badge, HStack, VStack, StatusBar } from 'native-base';
+import React, { useContext, useEffect } from 'react';
 import {
     StyleSheet,
     View,
     Text,
-    FlatList,
+    ScrollView,
+    Image,
     Dimensions,
-    TouchableOpacity,
-    Linking
 } from 'react-native';
 import { Entypo } from 'react-native-vector-icons';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { FirebaseContext } from '../../redux';
 import globleStyles from '../common/globleStyles';
-import { colors } from '../common/theme';
+import { colors, shadows, radii } from '../common/theme';
+import { useWindowWidth } from '../common/responsive';
 import * as actions from '../../redux/actions/productactions';
-import Header from '../components/Header';
-var { width } = Dimensions.get('window');
+import Spinner from '../components/Spinner';
+import FadeInView from '../components/FadeInView';
+import PressableCard from '../components/PressableCard';
+import EmptyState from '../components/EmptyState';
+import { motion } from '../common/animations';
 
-var unsubRef = null
-var cartRef = null
+let unsubRef = null;
+
 function Home(props) {
     const { api } = useContext(FirebaseContext);
     const dispatch = useDispatch();
     const auth = useSelector(state => state.auth);
+    const { width, isDesktop } = useWindowWidth();
+
+    const screenWidth = width || Dimensions.get('window').width;
+    const columns = isDesktop ? 3 : 2;
+    const horizontalGap = 10;
+    const containerPadding = 16;
+    const cardWidth = (screenWidth - containerPadding * 2 - horizontalGap * (columns - 1)) / columns;
 
     useEffect(() => {
-        unsubRef = dispatch(api.fetchProducts("active"));
+        unsubRef = dispatch(api.fetchProducts('active'));
         return () => unsubRef && unsubRef();
     }, [dispatch, api.fetchProducts]);
 
     useEffect(() => {
-        dispatch(api.fetchCartCount())
+        dispatch(api.fetchCartCount());
     }, [dispatch, api.fetchCartCount]);
 
-    // const [datas, setDatas] = useState(Array(10).fill(0))
-    const renderData = ({ item, index }) => {
-        return <TouchableOpacity activeOpacity={0.5} style={styles.mainCard} onPress={() => props.navigation.navigate("ProductDetail", { item })}>
-            {/* <Image
-                source={{ uri: "https://www.holidify.com/images/cmsuploads/compressed/Bangalore_citycover_20190613234056.jpg" }}
-                style={styles.box_icon}
-            /> */}
-            {item.image ?
-                <Image
-                    source={{ uri: item.image }}
-                    style={styles.box_icon}
-                />
-                :
-                <Image
-                    source={require('../../assets/icon.png')}
-                    style={styles.box_icon}
-                />
-            }
+    const products = props.products || [];
 
-            <Text style={styles.text}>{item.title}</Text>
-        </TouchableOpacity>;
-    }
+    const showLoader = () => {
+        if (props.loading) return <Spinner />;
+    };
 
     return (
         <View style={globleStyles.mainViewWithColor}>
-            <StatusBar backgroundColor={colors.PRIMARY_LIGHT} barStyle={'dark-content'} />
-            {/* <Header title={'Products'} isLeftIconHide isTitleCenter={false} style={{backgroundColor:colors.PRIMARY_LIGHT}}/> */}
+            <StatusBar backgroundColor={colors.SURFACE} barStyle={'dark-content'} />
+            <Box safeAreaTop bg={colors.SURFACE} />
 
-            <Box safeAreaTop bg={colors.PRIMARY_LIGHT} />
-            <View style={{ ...globleStyles.subMainView, marginHorizontal: 0 }}>
-                <View style={{ marginHorizontal: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <View>
-                        <Text style={globleStyles.normalText}>Hello</Text>
-                        <Text style={globleStyles.subHeader}>{auth.info.firstname && auth.info.firstname} {auth.info.lastname && auth.info.lastname}</Text>
-                    </View>
-                    <VStack justifyContent={'center'} mr={3}>
-                        {props.cartCount > 0 &&
-                            <Badge colorScheme="danger" rounded="full" mb={-4} mr={-4} zIndex={1} variant="solid" alignSelf="flex-end" _text={{
-                                fontSize: 12
-                            }}>
-                                {props.cartCount}
-                            </Badge>
-                        }
-                        <TouchableOpacity onPress={() => props.navigation.navigate('Cart')}>
-                            <Entypo name={'shopping-cart'} color="black" size={25} />
-                        </TouchableOpacity>
-                    </VStack>
+            <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={globleStyles.subMainView}>
+                    <FadeInView>
+                        <HStack justifyContent="space-between" alignItems="center" mb="4">
+                            <VStack flex={1} pr="3">
+                                <Text style={globleStyles.normalText}>Hello</Text>
+                                <Text style={globleStyles.subHeader}>
+                                    {auth.info?.firstname || ''} {auth.info?.lastname || ''}
+                                </Text>
+                                <Text style={globleStyles.screenDescription}>
+                                    Browse catalog and request quotes
+                                </Text>
+                            </VStack>
+                            <VStack justifyContent="center" alignItems="center">
+                                {props.cartCount > 0 && (
+                                    <Badge
+                                        colorScheme="danger"
+                                        rounded="full"
+                                        mb={-2}
+                                        mr={-2}
+                                        zIndex={1}
+                                        variant="solid"
+                                        alignSelf="flex-end"
+                                        _text={{ fontSize: 12 }}
+                                    >
+                                        {props.cartCount}
+                                    </Badge>
+                                )}
+                                <PressableCard
+                                    onPress={() => props.navigation.navigate('Cart')}
+                                    style={styles.cartButton}
+                                    accessibilityLabel="Open cart"
+                                >
+                                    <Entypo name="shopping-cart" color={colors.PRIMARY_DARK} size={24} />
+                                </PressableCard>
+                            </VStack>
+                        </HStack>
+                    </FadeInView>
+
+                    {products.length === 0 && !props.loading ? (
+                        <EmptyState
+                            icon="cube-outline"
+                            title="No products available"
+                            description="Check back soon — new catalog items will appear here."
+                        />
+                    ) : (
+                        <View style={styles.grid}>
+                            {products.map((item, index) => {
+                                const isLastInRow = (index + 1) % columns === 0;
+                                return (
+                                    <FadeInView
+                                        key={item.id || index}
+                                        delay={index * motion.stagger}
+                                        style={{
+                                            width: cardWidth,
+                                            marginRight: isLastInRow ? 0 : horizontalGap,
+                                            marginBottom: horizontalGap,
+                                        }}
+                                    >
+                                        <PressableCard
+                                            onPress={() => props.navigation.navigate('ProductDetail', { item })}
+                                            style={[styles.mainCard, { width: cardWidth, minHeight: cardWidth }]}
+                                            accessibilityLabel={`View ${item.title}`}
+                                        >
+                                            <Image
+                                                source={
+                                                    item.image
+                                                        ? { uri: item.image }
+                                                        : require('../../assets/icon.png')
+                                                }
+                                                style={styles.productImage}
+                                                resizeMode="contain"
+                                            />
+                                            <Text style={styles.productTitle} numberOfLines={2}>
+                                                {item.title}
+                                            </Text>
+                                        </PressableCard>
+                                    </FadeInView>
+                                );
+                            })}
+                        </View>
+                    )}
                 </View>
-                <FlatList
-                    refreshing={true}
-                    keyExtractor={(item, index) => index.toString()}
-                    showsVerticalScrollIndicator={false}
-                    data={props.products}
-                    // extraData={this.state}
+            </ScrollView>
 
-                    renderItem={renderData}
-                    style={{
-                        flex: 0, paddingTop: 5,
-                        backgroundColor: colors.fullTransparent,
-                    }}
-                    numColumns={2}
-                    fadingEdgeLength={10}
-                    contentContainerStyle={
-                        {
-                            backgroundColor: colors.fullTransparent,
-                            alignSelf: 'center',
-                            // alignItems: 'center'
-                        }
-                    }
-                />
-            </View>
+            {showLoader()}
         </View>
     );
 }
 
-const mapStateToProps = (state) => {
-    // console.log(state.auth.phonenumber);
-    return {
-        products: state.productsdata.products,
-        cartCount: state.productsdata.cartCount,
-        loading: state.productsdata.loading,
-        error: state.productsdata.error
-    }
-};
-export default connect(mapStateToProps, actions)(Home)
+const mapStateToProps = (state) => ({
+    products: state.productsdata.products,
+    cartCount: state.productsdata.cartCount,
+    loading: state.productsdata.loading,
+    error: state.productsdata.error,
+});
+
+export default connect(mapStateToProps, actions)(Home);
 
 const styles = StyleSheet.create({
-    mainView: {
-        flex: 1,
+    scroll: { flex: 1 },
+    scrollContent: { flexGrow: 1, paddingBottom: 120 },
+    cartButton: {
+        width: 48,
+        height: 48,
+        borderRadius: radii.md,
         backgroundColor: colors.WHITE,
-        //marginTop: StatusBar.currentHeight,
+        borderWidth: 1,
+        borderColor: colors.BORDER,
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...shadows.card,
     },
-    title: {
-        fontFamily: 'Sofia-Pro-Bold',
-        fontSize: width * 0.045,
-        color: colors.DARK_BLUE,
-        textAlign: 'center',
-        textDecorationLine: "underline",
-        marginVertical: 5
-    },
-    box_icon: {
-        width: 120,
-        height: 120,
-        alignSelf: 'center'
-    },
-    text: {
-        fontSize: 20,
-        // color: AppStyles.colorMain.color,
-        textAlign: 'center',
-        ...globleStyles.fontMedium,
-        marginTop: 5,
-        marginLeft: 0,
-        marginRight: 0,
+    grid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
     },
     mainCard: {
-        width: Dimensions.get('window').width / 2.25,
-        height: Dimensions.get('window').width / 2.25,
-        flexDirection: 'column',
-        marginHorizontal: 5,
-        marginTop: 5,
-        marginBottom: 10,
-        paddingHorizontal: 15,
-        // paddingTop: 15,
-        // paddingBottom: 5,
-        justifyContent: 'space-evenly',
-        backgroundColor: '#fff',
-        borderColor: '#fff',
+        backgroundColor: colors.WHITE,
+        borderRadius: radii.lg,
         borderWidth: 1,
-        borderRadius: 15,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.32,
-        shadowRadius: 5.46,
-        elevation: 9,
+        borderColor: colors.BORDER,
+        padding: 12,
+        justifyContent: 'space-between',
+        ...shadows.card,
     },
-})
+    productImage: {
+        width: '100%',
+        height: 100,
+        alignSelf: 'center',
+    },
+    productTitle: {
+        fontSize: 15,
+        ...globleStyles.fontMedium,
+        color: colors.TEXT_PRIMARY,
+        textAlign: 'center',
+        marginTop: 8,
+    },
+});

@@ -4,6 +4,7 @@ import {
     View,
     Text,
     TouchableOpacity,
+    StyleSheet,
 } from 'react-native';
 import { colors } from '../common/theme';
 import { layout } from '../common/responsive';
@@ -18,6 +19,7 @@ import * as actions from '../../redux/actions/authactions';
 import { showToastError, validateEmail } from '../../redux/actions/Validation';
 import { FirebaseContext } from '../../redux';
 import Spinner from '../components/Spinner';
+import FadeInView from '../components/FadeInView';
 import { not_logged_in } from '../common/Constants';
 
 function Login(props) {
@@ -69,12 +71,15 @@ function Login(props) {
             <ScreenContainer scroll maxWidth={layout.formMaxWidth} contentStyle={styles.content}>
                 <Center w="100%">
                     <Box w="100%" py="6">
-                        <Text style={globleStyles.subHeader}>Welcome back</Text>
-                        <Text style={globleStyles.screenDescription}>
-                            Sign in with your email and password to continue.
-                        </Text>
+                        <FadeInView>
+                            <Text style={globleStyles.subHeader}>Welcome back</Text>
+                            <Text style={globleStyles.screenDescription}>
+                                Sign in with your email and password to continue.
+                            </Text>
+                        </FadeInView>
 
-                        <VStack space={4} mt="6">
+                        <FadeInView delay={80}>
+                            <VStack space={4} mt="6">
                             <FormControl isRequired isInvalid={!!error}>
                                 <InputCard
                                     label="Email"
@@ -123,7 +128,8 @@ function Login(props) {
                             >
                                 <Text style={styles.linkTextBold}>Forgot password?</Text>
                             </TouchableOpacity>
-                        </VStack>
+                            </VStack>
+                        </FadeInView>
                     </Box>
                 </Center>
             </ScreenContainer>
@@ -139,7 +145,7 @@ const mapStateToProps = (state) => ({
 
 export default connect(mapStateToProps, actions)(Login);
 
-const styles = {
+const styles = StyleSheet.create({
     content: {
         justifyContent: 'center',
         paddingTop: 24,
@@ -157,4 +163,4 @@ const styles = {
         color: colors.PRIMARY_DARK,
         fontFamily: 'Sofia-Pro-SemiBold',
     },
-};
+});
