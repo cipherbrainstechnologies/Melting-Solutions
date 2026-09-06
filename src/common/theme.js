@@ -102,5 +102,30 @@ export const radii = {
   sm: 8,
   md: 12,
   lg: 16,
+  xl: 20,
   pill: 999,
+};
+
+export const shadows = {
+  card: {
+    shadowColor: '#1A1D26',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  elevated: {
+    shadowColor: '#1A1D26',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 6,
+  },
+  tabBar: {
+    shadowColor: '#1A1D26',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 8,
+  },
 };

@@ -1,4 +1,4 @@
-import { FETCH_TOTAL_COMPLETE_ORDER, FETCH_TOTAL_PRODUCTS, FETCH_TOTAL_RECEIVED_QUOTES, FETCH_TOTAL_REPORTS, FETCH_TOTAL_SEND_QUOTES, FETCH_TOTAL_USERS, SHOW_LOADER_HOME } from "../store/type";
+import { FETCH_GROWTH_METRICS, FETCH_TOTAL_COMPLETE_ORDER, FETCH_TOTAL_PRODUCTS, FETCH_TOTAL_RECEIVED_QUOTES, FETCH_TOTAL_REPORTS, FETCH_TOTAL_SEND_QUOTES, FETCH_TOTAL_USERS, SHOW_LOADER_HOME } from "../store/type";
 
 export const INITIAL_STATE = {
     totalUsers: 0,
@@ -7,6 +7,9 @@ export const INITIAL_STATE = {
     totalSendQuotes: 0,
     totalCompleteOrders: 0,
     totalReport: 0,
+    growthNewUsersWeek: 0,
+    growthActiveUsers: 0,
+    growthPendingQuotes: 0,
     loading: false,
     error: {
         flag: false,
@@ -82,6 +85,14 @@ export const homereducer = (state = INITIAL_STATE, action) => {
                     flag: false,
                     msg: null
                 },
+            };
+        case FETCH_GROWTH_METRICS:
+            return {
+                ...state,
+                growthNewUsersWeek: action.payload.newUsersWeek,
+                growthActiveUsers: action.payload.activeUsers,
+                growthPendingQuotes: action.payload.pendingQuotes,
+                loading: false,
             };
         default:
             return state;

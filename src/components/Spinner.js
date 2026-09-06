@@ -1,26 +1,48 @@
-import React from 'react';
-import { View, ActivityIndicator, Dimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, ActivityIndicator, Dimensions, Animated, StyleSheet } from 'react-native';
 import { colors } from '../common/theme';
-const { width, height } = Dimensions.get("window");
-export default function Spinner(props) {
-  return (
-    <View style={styles.spinnerStyle}>
-      <ActivityIndicator size={props.size || 'large'} color={colors.PRIMARY_DARK}/>
-    </View>
-  );
-};
+import { motion } from '../common/animations';
 
-const styles = {
+const { width, height } = Dimensions.get('window');
+
+export default function Spinner(props) {
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: motion.fast,
+      useNativeDriver: true,
+    }).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View style={[styles.spinnerStyle, { opacity }]}>
+      <View style={styles.card}>
+        <ActivityIndicator size={props.size || 'large'} color={colors.PRIMARY_DARK} />
+      </View>
+    </Animated.View>
+  );
+}
+
+const styles = StyleSheet.create({
   spinnerStyle: {
     flex: 1,
-    width: width,
-    height: height,
+    width,
+    height,
     justifyContent: 'center',
     alignItems: 'center',
-    position: "absolute",
+    position: 'absolute',
     zIndex: 99,
-    backgroundColor: "rgba(255,255,255,0.8)",
+    backgroundColor: 'rgba(248,249,252,0.72)',
     left: 0,
     top: 0,
-  }
-};
+  },
+  card: {
+    backgroundColor: colors.WHITE,
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.BORDER,
+  },
+});

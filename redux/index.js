@@ -16,7 +16,7 @@ import { addToCart, clearCartError, fetchCartCount, fetchCarts, submitForQuote }
 import { clearSaveAddressError, deleteSavedAddress, fetchSavedAddress, saveAddress, selectSavedAddress } from "./actions/searchlocationactions";
 import { clearOrderError, doCompleteOrder, doQuoteAcceptAndPayment, doQuoteConfirmedAndProcessing, doQuoteSent, fetchQuoteData, onChatBoardClick } from "./actions/orderactions";
 import { clearChatBoardData } from "./actions/chatactions";
-import { fetchTotalProductCount, fetchTotalQuoteCount, fetchTotalUsersCount } from "./actions/homeactions";
+import { fetchTotalProductCount, fetchTotalQuoteCount, fetchTotalUsersCount, fetchGrowthMetrics } from "./actions/homeactions";
 import { clearNBError, fetchNBUsers, sendBroadcastNotification } from "./actions/notificationbrodactions";
 import { clearReportError, fetchReportData } from "./actions/reportsactions";
 
@@ -95,6 +95,7 @@ const FirebaseProvider = ({ config, appcat, children }) => {
             fetchTotalUsersCount: () => (dispatch) => fetchTotalUsersCount()(dispatch)(firebaseContext),
             fetchTotalProductCount: () => (dispatch) => fetchTotalProductCount()(dispatch)(firebaseContext),
             fetchTotalQuoteCount: (status) => (dispatch) => fetchTotalQuoteCount(status)(dispatch)(firebaseContext),
+            fetchGrowthMetrics: () => (dispatch) => fetchGrowthMetrics()(dispatch)(firebaseContext),
         }
     }
 

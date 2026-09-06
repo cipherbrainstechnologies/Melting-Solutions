@@ -1,6 +1,6 @@
 import store from '../store/store';
 import { not_logged_in, STATUS_ORDER_COMPLETED, STATUS_QUOTE_REQUESTED, STATUS_QUOTE_SEND } from "../../src/common/Constants";
-import { ADD_PRODUCTS_FAILED, ADD_PRODUCTS_SUCCESS, ADD_USERS_FAILED, ADD_USERS_SUCCESS, CLEAR_PRODUCT_ERROR, EDIT_PRODUCTS_FAILED, EDIT_PRODUCTS_SUCCESS, FETCH_ALL_PRODUCTS, FETCH_ALL_PRODUCTS_FAILED, FETCH_ALL_PRODUCTS_SUCCESS, FETCH_TOTAL_COMPLETE_ORDER, FETCH_TOTAL_PRODUCTS, FETCH_TOTAL_RECEIVED_QUOTES, FETCH_TOTAL_SEND_QUOTES, FETCH_TOTAL_USERS, PRODUCT_DESC, PRODUCT_IMAGE, PRODUCT_IMAGE_BLOB, PRODUCT_QUANTITY_TYPE, PRODUCT_RESET, PRODUCT_SEARCH_DATA, PRODUCT_TITLE, SHOW_LOADER_HOME, SHOW_LOADER_PRODUCT, USER_COMPANYNAME, USER_EMAIL, USER_FIRSTNAME, USER_GSTNUMBER, USER_LASTNAME, USER_MOBILENUMBER, USER_RESET, USER_SEARCH_DATA } from '../store/type';
+import { ADD_PRODUCTS_FAILED, ADD_PRODUCTS_SUCCESS, ADD_USERS_FAILED, ADD_USERS_SUCCESS, CLEAR_PRODUCT_ERROR, EDIT_PRODUCTS_FAILED, EDIT_PRODUCTS_SUCCESS, FETCH_ALL_PRODUCTS, FETCH_ALL_PRODUCTS_FAILED, FETCH_ALL_PRODUCTS_SUCCESS, FETCH_GROWTH_METRICS, FETCH_TOTAL_COMPLETE_ORDER, FETCH_TOTAL_PRODUCTS, FETCH_TOTAL_RECEIVED_QUOTES, FETCH_TOTAL_SEND_QUOTES, FETCH_TOTAL_USERS, PRODUCT_DESC, PRODUCT_IMAGE, PRODUCT_IMAGE_BLOB, PRODUCT_QUANTITY_TYPE, PRODUCT_RESET, PRODUCT_SEARCH_DATA, PRODUCT_TITLE, SHOW_LOADER_HOME, SHOW_LOADER_PRODUCT, USER_COMPANYNAME, USER_EMAIL, USER_FIRSTNAME, USER_GSTNUMBER, USER_LASTNAME, USER_MOBILENUMBER, USER_RESET, USER_SEARCH_DATA } from '../store/type';
 import { getnumbertoken, uploadImagetoFirebase, validURL } from './Validation';
 
 
@@ -109,3 +109,43 @@ export const fetchTotalQuoteCount = (status) => (dispatch) => async (firebase) =
     console.log("fetchTotalQuoteCount", error);
   }
 }
+
+export const fetchGrowthMetrics = () => (dispatch) => (firebase) => {
+  const { usersCollection, quotesCollection } = firebase;
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  try {
+    usersCollection
+      .where('usertype', '!=', 'admin')
+      .onSnapshot((querySnapshot) => {
+        let newUsersWeek = 0;
+        let activeUsers = 0;
+        if (querySnapshot) {
+          querySnapshot.forEach((documentSnapshot) => {
+            const data = documentSnapshot.data();
+            if (data.isdelete === 'yes') return;
+            if (data.status === 'active') activeUsers++;
+            const created = data.createDate;
+            const createdDate = created?.toDate ? created.toDate() : created;
+            if (createdDate && new Date(createdDate) >= weekAgo) newUsersWeek++;
+          });
+        }
+
+        quotesCollection
+          .where('status', '==', STATUS_QUOTE_REQUESTED)
+          .onSnapshot((quoteSnapshot) => {
+            let pendingQuotes = 0;
+            if (quoteSnapshot) {
+              quoteSnapshot.forEach(() => { pendingQuotes++; });
+            }
+            dispatch({
+              type: FETCH_GROWTH_METRICS,
+              payload: { newUsersWeek, activeUsers, pendingQuotes },
+            });
+          });
+      });
+  } catch (error) {
+    console.log('fetchGrowthMetrics', error);
+  }
+};

@@ -1,15 +1,17 @@
-import { Box, Center, FormControl, VStack, WarningOutlineIcon } from 'native-base';
+import { Box, Center, FormControl, VStack, WarningOutlineIcon, StatusBar } from 'native-base';
 import React, { useContext, useEffect, useState } from 'react';
 import {
-    StyleSheet,
     View,
     Text,
     TouchableOpacity,
-    Dimensions
+    StyleSheet,
 } from 'react-native';
 import { colors } from '../common/theme';
+import { layout } from '../common/responsive';
 import globleStyles from '../common/globleStyles';
 import Header from '../components/Header';
+import ScreenContainer from '../components/ScreenContainer';
+import FadeInView from '../components/FadeInView';
 import { InputCard } from '../components/InputCard';
 import { Entypo } from 'react-native-vector-icons';
 import MaterialButtonDark from '../components/MaterialButtonDark';
@@ -18,7 +20,6 @@ import * as actions from '../../redux/actions/authactions';
 import { showToastError, showToastSuccess, validateEmail } from '../../redux/actions/Validation';
 import { FirebaseContext } from '../../redux';
 import Spinner from '../components/Spinner';
-var { width } = Dimensions.get('window');
 
 function ForgotPassword(props) {
     const { api } = useContext(FirebaseContext);
@@ -47,14 +48,14 @@ function ForgotPassword(props) {
             setPendingReset(false);
             showToastSuccess('Password reset email sent!');
         }
-    }, [auth.loading, auth.error, auth.success, pendingReset]);
+    }, [auth.loading, auth.error, auth.success, pendingReset, clearLoginError, dispatch]);
 
     const handleResetPassword = () => {
         if (!email || !validateEmail(email)) {
             setError('Please enter a valid email address');
             return;
         }
-        
+
         setError(null);
         setPendingReset(true);
         dispatch(sendPasswordResetEmail(email));
@@ -67,68 +68,77 @@ function ForgotPassword(props) {
     if (sent) {
         return (
             <View style={globleStyles.mainView}>
-                <Header title={'Reset Password'} onPress={() => props.navigation.goBack()} />
-                <Center w="100%">
-                    <Box safeArea p="2" py="8" w="95%" maxW="350">
-                        <Text style={globleStyles.subHeader}>Check Your Email</Text>
-                        <Text style={globleStyles.normalText}>
-                            We've sent a password reset link to {email}
-                        </Text>
-                        <VStack space={3} mt="10">
-                            <MaterialButtonDark onPress={() => props.navigation.navigate('Login')}>
-                                Back to Login
-                            </MaterialButtonDark>
-                        </VStack>
-                    </Box>
-                </Center>
+                <StatusBar backgroundColor={colors.WHITE} barStyle="dark-content" />
+                <Header title="Reset password" onPress={() => props.navigation.goBack()} isTitleCenter={false} />
+                <ScreenContainer scroll maxWidth={layout.formMaxWidth}>
+                    <Center w="100%">
+                        <Box w="100%" py="8">
+                            <FadeInView>
+                                <Text style={globleStyles.subHeader}>Check your email</Text>
+                                <Text style={globleStyles.screenDescription}>
+                                    We sent a password reset link to {email}
+                                </Text>
+                                <MaterialButtonDark onPress={() => props.navigation.navigate('Login')}>
+                                    Back to sign in
+                                </MaterialButtonDark>
+                            </FadeInView>
+                        </Box>
+                    </Center>
+                </ScreenContainer>
             </View>
         );
     }
 
     return (
         <View style={globleStyles.mainView}>
-            <Header title={'Reset Password'} onPress={() => props.navigation.goBack()} />
-            <Center w="100%">
-                <Box safeArea p="2" py="8" w="95%" maxW="350">
-                    <Text style={globleStyles.subHeader}>Forgot Password?</Text>
-                    <Text style={globleStyles.normalText}>
-                        Enter your email address and we'll send you a link to reset your password.
-                    </Text>
-
-                    <VStack space={3} mt="10">
-                        <FormControl isRequired isInvalid={!!error}>
-                            <InputCard
-                                onChangeText={setEmail}
-                                value={email}
-                                keyboardType="email-address"
-                                placeholder="Enter Email Address"
-                                autoCapitalize="none"
-                            >
-                                <Entypo name="mail" color="black" size={20} />
-                            </InputCard>
-                            
-                            {error && (
-                                <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-                                    {error}
-                                </FormControl.ErrorMessage>
-                            )}
-                        </FormControl>
-                        
-                        <MaterialButtonDark onPress={handleResetPassword}>
-                            Send Reset Email
-                        </MaterialButtonDark>
-
-                        <TouchableOpacity 
-                            style={globleStyles.actionItem} 
-                            onPress={() => props.navigation.navigate('Login')}
-                        >
-                            <Text style={{ ...globleStyles.actionText, color: colors.PRIMARY_DARK }}>
-                                Back to Login
+            <StatusBar backgroundColor={colors.WHITE} barStyle="dark-content" />
+            <Header title="Reset password" onPress={() => props.navigation.goBack()} isTitleCenter={false} />
+            <ScreenContainer scroll maxWidth={layout.formMaxWidth}>
+                <Center w="100%">
+                    <Box w="100%" py="8">
+                        <FadeInView>
+                            <Text style={globleStyles.subHeader}>Forgot password?</Text>
+                            <Text style={globleStyles.screenDescription}>
+                                Enter your email and we will send you a reset link.
                             </Text>
-                        </TouchableOpacity>
-                    </VStack>
-                </Box>
-            </Center>
+                        </FadeInView>
+
+                        <FadeInView delay={80}>
+                            <VStack space={4} mt="6">
+                                <FormControl isRequired isInvalid={!!error}>
+                                    <InputCard
+                                        label="Email"
+                                        onChangeText={setEmail}
+                                        value={email}
+                                        keyboardType="email-address"
+                                        placeholder="Enter email address"
+                                        autoCapitalize="none"
+                                    >
+                                        <Entypo name="mail" color={colors.GREY_7} size={20} />
+                                    </InputCard>
+
+                                    {error && (
+                                        <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
+                                            {error}
+                                        </FormControl.ErrorMessage>
+                                    )}
+                                </FormControl>
+
+                                <MaterialButtonDark onPress={handleResetPassword}>
+                                    Send reset email
+                                </MaterialButtonDark>
+
+                                <TouchableOpacity
+                                    style={styles.linkButton}
+                                    onPress={() => props.navigation.navigate('Login')}
+                                >
+                                    <Text style={styles.linkText}>Back to sign in</Text>
+                                </TouchableOpacity>
+                            </VStack>
+                        </FadeInView>
+                    </Box>
+                </Center>
+            </ScreenContainer>
             {showLoader()}
         </View>
     );
@@ -136,7 +146,12 @@ function ForgotPassword(props) {
 
 const mapStateToProps = (state) => ({
     loading: state.auth.loading,
-    error: state.auth.error
+    error: state.auth.error,
 });
 
 export default connect(mapStateToProps, actions)(ForgotPassword);
+
+const styles = StyleSheet.create({
+    linkButton: { alignSelf: 'center', paddingVertical: 8 },
+    linkText: { ...globleStyles.normalText, color: colors.PRIMARY_DARK, fontFamily: 'Sofia-Pro-SemiBold' },
+});

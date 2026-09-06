@@ -1,18 +1,18 @@
-import { Box, Center, FormControl, Stack, VStack, WarningOutlineIcon, ScrollView, Input, Icon } from 'native-base';
+import { Box, Center, FormControl, VStack, WarningOutlineIcon, StatusBar } from 'native-base';
 import React, { useContext, useEffect, useState } from 'react';
 import {
-    StyleSheet,
     View,
     Text,
     TouchableOpacity,
-    Dimensions,
-    Image,
-    Linking
+    StyleSheet,
 } from 'react-native';
 import { FontSemiBold } from '../common/Constants';
 import globleStyles from '../common/globleStyles';
 import { colors } from '../common/theme';
+import { layout } from '../common/responsive';
 import Header from '../components/Header';
+import ScreenContainer from '../components/ScreenContainer';
+import FadeInView from '../components/FadeInView';
 import { InputCard } from '../components/InputCard';
 import { Entypo, MaterialIcons } from 'react-native-vector-icons';
 import MaterialButtonDark from '../components/MaterialButtonDark';
@@ -20,8 +20,8 @@ import { connect, useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../redux/actions/authactions';
 import { showToastError, validateEmail } from '../../redux/actions/Validation';
 import { FirebaseContext } from '../../redux';
+import { trackEvent, AnalyticsEvents } from '../common/analytics';
 import Spinner from '../components/Spinner';
-var { width } = Dimensions.get('window');
 
 function Register(props) {
     const { api } = useContext(FirebaseContext);
@@ -47,6 +47,7 @@ function Register(props) {
 
     useEffect(() => {
         if (!auth.loading && auth.info && auth.info.uid) {
+            trackEvent(AnalyticsEvents.REGISTER_SUCCESS, { role: auth.info.usertype });
             props.navigation.navigate('AuthLoading');
         }
     }, [auth.info, auth.loading]);
@@ -87,27 +88,28 @@ function Register(props) {
 
     return (
         <View style={globleStyles.mainView}>
-            <Header title={'Registration'} onPress={() => props.navigation.goBack()} />
-            <ScrollView _contentContainerStyle={{
-                mb: "4",
-                minW: "72"
-            }}>
+            <StatusBar backgroundColor={colors.WHITE} barStyle="dark-content" />
+            <Header title="Create account" onPress={() => props.navigation.goBack()} isTitleCenter={false} />
+            <ScreenContainer scroll maxWidth={layout.formMaxWidth}>
                 <Center w="100%">
-                    <Box p="2" w="95%" maxW="350">
-                        <Text style={globleStyles.subHeader}>Create Account</Text>
-                        <Text style={globleStyles.normalText}>
-                            Enter your details to create an account
-                        </Text>
-                        <TouchableOpacity 
-                            style={{ ...globleStyles.actionItem, alignSelf: 'auto', marginLeft: 0 }} 
-                            onPress={() => props.navigation.navigate('Login')}
-                        >
-                            <Text style={{ ...globleStyles.actionText, color: colors.PRIMARY_DARK, fontFamily: FontSemiBold }}>
-                                Already have account?
+                    <Box w="100%" py="6">
+                        <FadeInView>
+                            <Text style={globleStyles.subHeader}>Create account</Text>
+                            <Text style={globleStyles.screenDescription}>
+                                Enter your details to start requesting quotes.
                             </Text>
-                        </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.linkButton}
+                                onPress={() => props.navigation.navigate('Login')}
+                            >
+                                <Text style={styles.linkText}>
+                                    Already have an account? <Text style={styles.linkBold}>Sign in</Text>
+                                </Text>
+                            </TouchableOpacity>
+                        </FadeInView>
 
-                        <VStack space={3} mt="10">
+                        <FadeInView delay={80}>
+                        <VStack space={4} mt="6">
                             <FormControl isRequired isInvalid={!!error}>
                                 <InputCard
                                     onChangeText={setFirstname}
@@ -180,9 +182,10 @@ function Register(props) {
                                 Create Account
                             </MaterialButtonDark>
                         </VStack>
+                        </FadeInView>
                     </Box>
                 </Center>
-            </ScrollView>
+            </ScreenContainer>
             {showLoader()}
         </View>
     );
@@ -197,18 +200,7 @@ export default connect(mapStateToProps, actions)(Register);
 
 
 const styles = StyleSheet.create({
-    mainView: {
-        flex: 1,
-        backgroundColor: colors.WHITE,
-        //marginTop: StatusBar.currentHeight,
-        justifyContent: 'center'
-    },
-    title: {
-        fontFamily: 'Sofia-Pro-Bold',
-        fontSize: width * 0.045,
-        color: colors.DARK_BLUE,
-        textAlign: 'center',
-        textDecorationLine: "underline",
-        marginVertical: 5
-    }
-})
+    linkButton: { paddingVertical: 8, marginTop: 4 },
+    linkText: { ...globleStyles.normalText },
+    linkBold: { color: colors.PRIMARY_DARK, fontFamily: FontSemiBold },
+});

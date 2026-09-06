@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -15,6 +15,8 @@ import ShowcaseSection from '../components/landing/ShowcaseSection';
 import TrustSection from '../components/landing/TrustSection';
 import FinalCtaSection from '../components/landing/FinalCtaSection';
 import LandingFooter from '../components/landing/LandingFooter';
+import GrowthSection from '../components/landing/GrowthSection';
+import { trackEvent, AnalyticsEvents } from '../common/analytics';
 
 /**
  * Marketing landing — web AuthStack entry. Native continues to use Login.
@@ -25,12 +27,18 @@ export default function Landing(props) {
   const [scrolled, setScrolled] = useState(false);
 
   const goRegister = useCallback(() => {
+    trackEvent(AnalyticsEvents.CTA_REGISTER, { source: 'landing' });
     props.navigation.navigate('Register');
   }, [props.navigation]);
 
   const goLogin = useCallback(() => {
+    trackEvent(AnalyticsEvents.CTA_LOGIN, { source: 'landing' });
     props.navigation.navigate('Login');
   }, [props.navigation]);
+
+  useEffect(() => {
+    trackEvent(AnalyticsEvents.LANDING_VIEW);
+  }, []);
 
   const onSectionLayout = useCallback((id) => (e) => {
     sectionY.current[id] = e.nativeEvent.layout.y;
@@ -87,6 +95,7 @@ export default function Landing(props) {
         <View onLayout={onSectionLayout('how')}>
           <HowItWorksSection />
         </View>
+        <GrowthSection />
         <View onLayout={onSectionLayout('product')}>
           <ShowcaseSection />
         </View>

@@ -1,175 +1,184 @@
-import { Badge, Box, Flex, HStack, Pressable, Image, AspectRatio, StatusBar, VStack } from 'native-base';
-import React, { useContext, useEffect, useState } from 'react';
+import { Box, Badge, HStack, VStack, StatusBar } from 'native-base';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
     StyleSheet,
     View,
     Text,
-    FlatList,
+    ScrollView,
+    Image,
     Dimensions,
-    TouchableOpacity,
-    Linking
+    RefreshControl,
 } from 'react-native';
 import { Entypo } from 'react-native-vector-icons';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { FirebaseContext } from '../../redux';
 import globleStyles from '../common/globleStyles';
-import { colors } from '../common/theme';
+import { colors, shadows, radii } from '../common/theme';
+import { useWindowWidth } from '../common/responsive';
 import * as actions from '../../redux/actions/productactions';
-import Header from '../components/Header';
-var { width } = Dimensions.get('window');
+import FadeInView from '../components/FadeInView';
+import PressableCard from '../components/PressableCard';
+import EmptyState from '../components/EmptyState';
+import GrowthBanner from '../components/GrowthBanner';
+import OnboardingTips from '../components/OnboardingTips';
+import { SkeletonGrid } from '../components/SkeletonLoader';
+import { motion } from '../common/animations';
+import { useRefresh } from '../hooks/useRefresh';
+import { getItem, setItem, storageKeys } from '../common/storage';
+import { trackEvent, AnalyticsEvents } from '../common/analytics';
 
-var unsubRef = null
-var cartRef = null
+let unsubRef = null;
+
 function Home(props) {
     const { api } = useContext(FirebaseContext);
     const dispatch = useDispatch();
     const auth = useSelector(state => state.auth);
+    const { width, isDesktop } = useWindowWidth();
+    const [showGrowthBanner, setShowGrowthBanner] = useState(false);
+
+    const screenWidth = width || Dimensions.get('window').width;
+    const columns = isDesktop ? 3 : 2;
+    const horizontalGap = 10;
+    const containerPadding = 16;
+    const cardWidth = (screenWidth - containerPadding * 2 - horizontalGap * (columns - 1)) / columns;
+
+    const loadCatalog = useCallback(() => {
+        if (unsubRef) unsubRef();
+        unsubRef = dispatch(api.fetchProducts('active'));
+        dispatch(api.fetchCartCount());
+    }, [dispatch, api]);
 
     useEffect(() => {
-        unsubRef = dispatch(api.fetchProducts("active"));
+        loadCatalog();
         return () => unsubRef && unsubRef();
-    }, [dispatch, api.fetchProducts]);
+    }, [loadCatalog]);
 
     useEffect(() => {
-        dispatch(api.fetchCartCount())
-    }, [dispatch, api.fetchCartCount]);
+        getItem(storageKeys.buyerOnboarding).then((seen) => {
+            if (!seen) setShowGrowthBanner(true);
+        });
+    }, []);
 
-    // const [datas, setDatas] = useState(Array(10).fill(0))
-    const renderData = ({ item, index }) => {
-        return <TouchableOpacity activeOpacity={0.5} style={styles.mainCard} onPress={() => props.navigation.navigate("ProductDetail", { item })}>
-            {/* <Image
-                source={{ uri: "https://www.holidify.com/images/cmsuploads/compressed/Bangalore_citycover_20190613234056.jpg" }}
-                style={styles.box_icon}
-            /> */}
-            {item.image ?
-                <Image
-                    source={{ uri: item.image }}
-                    style={styles.box_icon}
-                />
-                :
-                <Image
-                    source={require('../../assets/icon.png')}
-                    style={styles.box_icon}
-                />
-            }
+    const { refreshing, onRefresh } = useRefresh(async () => {
+        loadCatalog();
+    });
 
-            <Text style={styles.text}>{item.title}</Text>
-        </TouchableOpacity>;
-    }
+    const products = props.products || [];
+    const showSkeleton = props.loading && products.length === 0;
+
+    const dismissBanner = async () => {
+        await setItem(storageKeys.buyerOnboarding, '1');
+        setShowGrowthBanner(false);
+    };
 
     return (
         <View style={globleStyles.mainViewWithColor}>
-            <StatusBar backgroundColor={colors.PRIMARY_LIGHT} barStyle={'dark-content'} />
-            {/* <Header title={'Products'} isLeftIconHide isTitleCenter={false} style={{backgroundColor:colors.PRIMARY_LIGHT}}/> */}
+            <StatusBar backgroundColor={colors.SURFACE} barStyle="dark-content" />
+            <Box safeAreaTop bg={colors.SURFACE} />
+            <OnboardingTips role="user" storageKey={storageKeys.buyerOnboarding} onComplete={() => setShowGrowthBanner(false)} />
 
-            <Box safeAreaTop bg={colors.PRIMARY_LIGHT} />
-            <View style={{ ...globleStyles.subMainView, marginHorizontal: 0 }}>
-                <View style={{ marginHorizontal: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <View>
-                        <Text style={globleStyles.normalText}>Hello</Text>
-                        <Text style={globleStyles.subHeader}>{auth.info.firstname && auth.info.firstname} {auth.info.lastname && auth.info.lastname}</Text>
-                    </View>
-                    <VStack justifyContent={'center'} mr={3}>
-                        {props.cartCount > 0 &&
-                            <Badge colorScheme="danger" rounded="full" mb={-4} mr={-4} zIndex={1} variant="solid" alignSelf="flex-end" _text={{
-                                fontSize: 12
-                            }}>
-                                {props.cartCount}
-                            </Badge>
-                        }
-                        <TouchableOpacity onPress={() => props.navigation.navigate('Cart')}>
-                            <Entypo name={'shopping-cart'} color="black" size={25} />
-                        </TouchableOpacity>
-                    </VStack>
+            <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.PRIMARY_DARK} />
+                }
+            >
+                <View style={globleStyles.subMainView}>
+                    <FadeInView>
+                        <HStack justifyContent="space-between" alignItems="center" mb="4">
+                            <VStack flex={1} pr="3">
+                                <Text style={globleStyles.normalText}>Hello</Text>
+                                <Text style={globleStyles.subHeader}>
+                                    {auth.info?.firstname || ''} {auth.info?.lastname || ''}
+                                </Text>
+                                <Text style={globleStyles.screenDescription}>
+                                    Browse catalog and request your first quote today.
+                                </Text>
+                            </VStack>
+                            <VStack justifyContent="center" alignItems="center">
+                                {props.cartCount > 0 && (
+                                    <Badge colorScheme="danger" rounded="full" mb={-2} mr={-2} zIndex={1} variant="solid" alignSelf="flex-end" _text={{ fontSize: 12 }}>
+                                        {props.cartCount}
+                                    </Badge>
+                                )}
+                                <PressableCard onPress={() => props.navigation.navigate('Cart')} style={styles.cartButton} accessibilityLabel="Open cart">
+                                    <Entypo name="shopping-cart" color={colors.PRIMARY_DARK} size={24} />
+                                </PressableCard>
+                            </VStack>
+                        </HStack>
+                    </FadeInView>
+
+                    {showGrowthBanner && (
+                        <GrowthBanner
+                            title="Start your first quote"
+                            description="Add products to your cart and submit a quote request — sellers respond in chat."
+                            ctaLabel="Search products"
+                            onPress={() => {
+                                trackEvent(AnalyticsEvents.CTA_REGISTER, { source: 'buyer_home_banner' });
+                                props.navigation.navigate('Search');
+                            }}
+                            onDismiss={dismissBanner}
+                        />
+                    )}
+
+                    {showSkeleton ? (
+                        <SkeletonGrid columns={columns} count={6} cardWidth={cardWidth} cardHeight={cardWidth} />
+                    ) : products.length === 0 ? (
+                        <EmptyState icon="cube-outline" title="No products available" description="Check back soon — new catalog items will appear here." />
+                    ) : (
+                        <View style={styles.grid}>
+                            {products.map((item, index) => {
+                                const isLastInRow = (index + 1) % columns === 0;
+                                return (
+                                    <FadeInView
+                                        key={item.id || index}
+                                        delay={index * motion.stagger}
+                                        style={{ width: cardWidth, marginRight: isLastInRow ? 0 : horizontalGap, marginBottom: horizontalGap }}
+                                    >
+                                        <PressableCard
+                                            onPress={() => {
+                                                trackEvent(AnalyticsEvents.PRODUCT_VIEW, { productId: item.id, title: item.title });
+                                                props.navigation.navigate('ProductDetail', { item });
+                                            }}
+                                            style={[styles.mainCard, { width: cardWidth, minHeight: cardWidth }]}
+                                            accessibilityLabel={`View ${item.title}`}
+                                        >
+                                            <Image source={item.image ? { uri: item.image } : require('../../assets/icon.png')} style={styles.productImage} resizeMode="contain" />
+                                            <Text style={styles.productTitle} numberOfLines={2}>{item.title}</Text>
+                                        </PressableCard>
+                                    </FadeInView>
+                                );
+                            })}
+                        </View>
+                    )}
                 </View>
-                <FlatList
-                    refreshing={true}
-                    keyExtractor={(item, index) => index.toString()}
-                    showsVerticalScrollIndicator={false}
-                    data={props.products}
-                    // extraData={this.state}
-
-                    renderItem={renderData}
-                    style={{
-                        flex: 0, paddingTop: 5,
-                        backgroundColor: colors.fullTransparent,
-                    }}
-                    numColumns={2}
-                    fadingEdgeLength={10}
-                    contentContainerStyle={
-                        {
-                            backgroundColor: colors.fullTransparent,
-                            alignSelf: 'center',
-                            // alignItems: 'center'
-                        }
-                    }
-                />
-            </View>
+            </ScrollView>
         </View>
     );
 }
 
-const mapStateToProps = (state) => {
-    // console.log(state.auth.phonenumber);
-    return {
-        products: state.productsdata.products,
-        cartCount: state.productsdata.cartCount,
-        loading: state.productsdata.loading,
-        error: state.productsdata.error
-    }
-};
-export default connect(mapStateToProps, actions)(Home)
+const mapStateToProps = (state) => ({
+    products: state.productsdata.products,
+    cartCount: state.productsdata.cartCount,
+    loading: state.productsdata.loading,
+});
+
+export default connect(mapStateToProps, actions)(Home);
 
 const styles = StyleSheet.create({
-    mainView: {
-        flex: 1,
-        backgroundColor: colors.WHITE,
-        //marginTop: StatusBar.currentHeight,
+    scroll: { flex: 1 },
+    scrollContent: { flexGrow: 1, paddingBottom: 120 },
+    cartButton: {
+        width: 48, height: 48, borderRadius: radii.md, backgroundColor: colors.WHITE,
+        borderWidth: 1, borderColor: colors.BORDER, alignItems: 'center', justifyContent: 'center', ...shadows.card,
     },
-    title: {
-        fontFamily: 'Sofia-Pro-Bold',
-        fontSize: width * 0.045,
-        color: colors.DARK_BLUE,
-        textAlign: 'center',
-        textDecorationLine: "underline",
-        marginVertical: 5
-    },
-    box_icon: {
-        width: 120,
-        height: 120,
-        alignSelf: 'center'
-    },
-    text: {
-        fontSize: 20,
-        // color: AppStyles.colorMain.color,
-        textAlign: 'center',
-        ...globleStyles.fontMedium,
-        marginTop: 5,
-        marginLeft: 0,
-        marginRight: 0,
-    },
+    grid: { flexDirection: 'row', flexWrap: 'wrap' },
     mainCard: {
-        width: Dimensions.get('window').width / 2.25,
-        height: Dimensions.get('window').width / 2.25,
-        flexDirection: 'column',
-        marginHorizontal: 5,
-        marginTop: 5,
-        marginBottom: 10,
-        paddingHorizontal: 15,
-        // paddingTop: 15,
-        // paddingBottom: 5,
-        justifyContent: 'space-evenly',
-        backgroundColor: '#fff',
-        borderColor: '#fff',
-        borderWidth: 1,
-        borderRadius: 15,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.32,
-        shadowRadius: 5.46,
-        elevation: 9,
+        backgroundColor: colors.WHITE, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.BORDER,
+        padding: 12, justifyContent: 'space-between', ...shadows.card,
     },
-})
+    productImage: { width: '100%', height: 100, alignSelf: 'center' },
+    productTitle: { fontSize: 15, ...globleStyles.fontMedium, color: colors.TEXT_PRIMARY, textAlign: 'center', marginTop: 8 },
+});

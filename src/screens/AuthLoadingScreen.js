@@ -2,52 +2,49 @@ import React, { useContext, useEffect } from 'react';
 import {
   StyleSheet,
   View,
-  Dimensions,
-  ActivityIndicator,
   Text,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch } from 'react-redux';
 import { FirebaseContext } from '../../redux';
+import FadeInView from '../components/FadeInView';
+import { colors, typography } from '../common/theme';
 
 export default function AuthLoadingScreen(props) {
   const { api } = useContext(FirebaseContext);
   const auth = useSelector(state => state.auth);
   const dispatch = useDispatch();
 
-  // Notification deep-links are handled in AppCommon (stays mounted).
   useEffect(() => {
     if (auth.info && auth.info.uid) {
-      let role = auth.info.usertype;
+      const role = auth.info.usertype;
       if (role === 'user') {
-        if (auth.info.profileStatus) {
-          props.navigation.navigate('UserRoot');
-        } else {
-          props.navigation.navigate('ProfileRoot');
-        }
+        props.navigation.navigate(auth.info.profileStatus ? 'UserRoot' : 'ProfileRoot');
       } else if (role === 'admin') {
-        if (auth.info.profileStatus) {
-          props.navigation.navigate('AdminRoot');
-        } else {
-          props.navigation.navigate('ProfileRoot');
-        }
+        props.navigation.navigate(auth.info.profileStatus ? 'AdminRoot' : 'ProfileRoot');
       } else {
         dispatch(api.signOut());
         props.navigation.navigate('AuthRoot');
       }
     }
-  }, [auth.info]);
+  }, [auth.info, api.signOut, dispatch, props.navigation]);
 
   useEffect(() => {
     if (api && auth.error && auth.error.msg && !auth.info) {
       dispatch(api.clearLoginError());
       props.navigation.navigate('AuthRoot');
     }
-  }, [auth.error]);
+  }, [api, auth.error, auth.info, dispatch, props.navigation]);
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator />
-      <Text style={{ paddingBottom: 100 }}>Fetching Data...</Text>
+      <FadeInView style={styles.content}>
+        <Image source={require('../../assets/icon.png')} style={styles.logo} />
+        <Text style={styles.brand}>Melting Solution</Text>
+        <Text style={styles.subtitle}>Preparing your workspace…</Text>
+        <ActivityIndicator size="large" color={colors.PRIMARY_DARK} style={styles.loader} />
+      </FadeInView>
     </View>
   );
 }
@@ -55,16 +52,29 @@ export default function AuthLoadingScreen(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: 'center'
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.SURFACE,
   },
-  imagebg: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-    justifyContent: "flex-end",
-    alignItems: 'center'
-  }
+  content: {
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  logo: {
+    width: 72,
+    height: 72,
+    borderRadius: 18,
+    marginBottom: 20,
+  },
+  brand: {
+    ...typography.title,
+    marginBottom: 8,
+  },
+  subtitle: {
+    ...typography.caption,
+    marginBottom: 28,
+  },
+  loader: {
+    marginTop: 8,
+  },
 });

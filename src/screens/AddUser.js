@@ -15,6 +15,7 @@ import MaterialButtonDark from '../components/MaterialButtonDark';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../redux/actions/useractions';
 import { showToastError, showToastSuccess, validateEmail, validatePhonenumber } from '../../redux/actions/Validation';
+import { trackEvent, AnalyticsEvents } from '../common/analytics';
 import { FirebaseContext } from '../../redux';
 import Spinner from '../components/Spinner';
 
@@ -113,6 +114,7 @@ function AddUser(props) {
             dispatch(api.editUser(uid));
         } else {
             dispatch(api.adminCreateUser(password));
+    trackEvent(AnalyticsEvents.ADMIN_USER_CREATED);
         }
     };
 
