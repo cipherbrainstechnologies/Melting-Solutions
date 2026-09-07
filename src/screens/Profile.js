@@ -1,13 +1,10 @@
 import { Box, HStack, StatusBar } from 'native-base';
 import React, { useContext, useEffect } from 'react';
 import {
-    StyleSheet,
     View,
-    Alert,
     TouchableOpacity,
     Text,
 } from 'react-native';
-import { NavigationActions } from "react-navigation";
 
 import globleStyles from '../common/globleStyles';
 import { colors } from '../common/theme';
@@ -16,6 +13,7 @@ import ProfileComponent from '../components/ProfileComponent';
 import { FirebaseContext } from '../../redux';
 import { useDispatch, useSelector } from 'react-redux';
 import { Entypo } from 'react-native-vector-icons';
+import { confirmSignOut, performSignOut } from '../common/logout';
 
 export default function Profile(props) {
     const { api } = useContext(FirebaseContext);
@@ -31,33 +29,7 @@ export default function Profile(props) {
     }, [auth.success]);
 
     const onLogout = () => {
-        Alert.alert(
-            'Sign out',
-            'Are you sure you want to sign out?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Sign out',
-                    style: 'destructive',
-                    onPress: () => logout(),
-                },
-            ],
-            { cancelable: true }
-        );
-    };
-
-    const logout = () => {
-        dispatch(api.signOut());
-        props.navigation.dispatch({
-            type: NavigationActions.NAVIGATE,
-            routeName: 'AuthRoot',
-            key: null,
-            action: {
-                type: NavigationActions.RESET,
-                index: 0,
-                actions: [{ type: NavigationActions.RESET, routeName: 'AuthRoot' }]
-            }
-        });
+        confirmSignOut(() => performSignOut(dispatch, api.signOut));
     };
 
     return (

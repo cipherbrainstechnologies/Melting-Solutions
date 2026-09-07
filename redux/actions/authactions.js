@@ -242,25 +242,17 @@ const getPushNotificationsToken = async () => {
 }
 
 export const signOut = () => (dispatch) => (firebase) => {
+  const { auth } = firebase;
 
-  const {
-    auth,
-  } = firebase;
+  // Clear app state immediately so UI can redirect without waiting on Firebase
+  dispatch({
+    type: USER_SIGN_OUT,
+    payload: null,
+  });
 
-  auth.signOut()
-    .then(() => {
-      dispatch({
-        type: USER_SIGN_OUT,
-        payload: null
-      });
-    })
-    .catch(error => {
-      dispatch({
-        type: USER_SIGN_OUT,
-        payload: null
-      });
-      console.log("signOut error:", error);
-    });
+  return auth.signOut().catch((error) => {
+    console.log('signOut error:', error);
+  });
 };
 
 export const deleteUser = (uid) => (dispatch) => (firebase) => {
