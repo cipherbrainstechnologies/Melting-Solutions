@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { FontBold, FontSemiBold } from '../common/Constants';
 import globleStyles from '../common/globleStyles';
-import { colors } from '../common/theme';
+import { colors, radii, shadows, spacing } from '../common/theme';
 import Header from '../components/Header';
 import * as ImagePicker from 'expo-image-picker';
 import ActionSheet from "react-native-actions-sheet";
@@ -24,6 +24,7 @@ import { connect, useDispatch } from 'react-redux';
 import * as actions from '../../redux/actions/productactions';
 import Spinner from '../components/Spinner';
 import { showToastError, showToastSuccess } from '../../redux/actions/Validation';
+import { getImagePickerUri } from '../common/imagePicker';
 
 
 var { width } = Dimensions.get('window');
@@ -137,8 +138,9 @@ function AddProduct(props) {
             });
 
             actionSheetRef.current?.setModalVisible(false);
-            if (!result.cancelled) {
-                productImageChange(result.uri)
+            const uri = getImagePickerUri(result);
+            if (uri) {
+                productImageChange(uri)
             }
         } else {
             Alert.alert('Alert', 'Camera Permisison Error')
@@ -170,12 +172,8 @@ function AddProduct(props) {
     return (
         <View style={globleStyles.mainView}>
             <StatusBar backgroundColor={colors.WHITE} barStyle={'dark-content'} />
-            <Header title={actionUid ? 'Edit Product' : 'Add Product'} onPress={() => props.navigation.goBack()} isTitleCenter={false} />
-            <ScrollView _contentContainerStyle={{
-                // px: "10px",
-                mb: "4",
-                minW: "72"
-            }}>
+            <Header title={actionUid ? 'Edit product' : 'Add product'} onPress={() => props.navigation.goBack()} isTitleCenter={false} />
+            <ScrollView contentContainerStyle={styles.scrollContent}>
 
                 <Center w="100%">
                     <Box p="2" w="95%">
@@ -183,7 +181,7 @@ function AddProduct(props) {
                         <VStack space={3} mt="0">
                             {uploadImage()}
 
-                            <Stack style={{ marginVertical: 10, alignItems: 'center' }}>
+                            <Stack style={styles.imageSection}>
                                 {product_image ?
                                     <Image
                                         source={{ uri: product_image }}
@@ -195,22 +193,21 @@ function AddProduct(props) {
                                         style={globleStyles.profileIcon}
                                     />
                                 }
-                                {/* image picker */}
                                 <TouchableOpacity activeOpacity={.5} style={globleStyles.profileEditView} onPress={showActionSheet}>
-                                    <Text style={globleStyles.normalTextWhite}>Upload</Text>
+                                    <Text style={globleStyles.normalTextWhite}>Upload photo</Text>
                                 </TouchableOpacity>
 
                             </Stack>
                             <FormControl isRequired isInvalid>
                                 <InputCard
-                                    label={'Product Name'}
+                                    label={'Product name'}
                                     onChangeText={productTitleChange}
                                     blurOnSubmit={false}
                                     value={product_title}
                                     returnKey={"next"}
                                     // keyboardType={"email-address"}
                                     secureEntry={false}
-                                    placeholder={"Enter Product Name"} >
+                                    placeholder={"Enter product name"} >
                                     {/* <Entypo name="user" color={colors.GREY_7} size={20} /> */}
                                     <MaterialIcons name="person" color={colors.GREY_7} size={20} />
                                 </InputCard>
@@ -230,7 +227,7 @@ function AddProduct(props) {
                                     returnKey={"next"}
                                     // keyboardType={"email-address"}
                                     secureEntry={false}
-                                    placeholder={"Enter Description up to 200 characters"}
+                                    placeholder={"Enter description up to 200 characters"}
                                     multiline
                                     maxLength={200}
                                     textInputStyle={{ paddingLeft: 0 }}>
@@ -243,8 +240,8 @@ function AddProduct(props) {
                             </FormControl>
 
                             <FormControl isInvalid>
-                                <Text style={{ ...globleStyles.normalText, ...globleStyles.fontSemiBold }}>Quantity Type</Text>
-                                <Radio.Group defaultValue={product_quantity_type} name="myRadioGroup" accessibilityLabel="Pick your favorite number" onChange={productQuantityTypeChange}>
+                                <Text style={{ ...globleStyles.normalText, ...globleStyles.fontSemiBold }}>Quantity type</Text>
+                                <Radio.Group value={product_quantity_type || undefined} name="myRadioGroup" accessibilityLabel="Quantity type" onChange={productQuantityTypeChange}>
                                     <HStack space={4}>
                                         <Radio value="KG" my={1} colorScheme="blue" color="green" selectedColor="yellow">
                                             KG
@@ -289,10 +286,20 @@ export default connect(mapStateToProps, actions)(AddProduct)
 
 
 const styles = StyleSheet.create({
+    scrollContent: {
+        paddingBottom: spacing.xl,
+    },
+    imageSection: {
+        marginVertical: spacing.md,
+        alignItems: 'center',
+        backgroundColor: colors.SURFACE,
+        borderRadius: radii.lg,
+        padding: spacing.lg,
+        ...shadows.card,
+    },
     mainView: {
         flex: 1,
         backgroundColor: colors.WHITE,
-        //marginTop: StatusBar.currentHeight,
         justifyContent: 'center'
     },
     title: {

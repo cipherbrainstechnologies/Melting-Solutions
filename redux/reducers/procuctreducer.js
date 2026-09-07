@@ -80,8 +80,8 @@ export const procuctreducer = (state = INITIAL_STATE, action) => {
                 success_status: action.payload,
                 loading: false,
                 error: {
-                    flag: true,
-                    msg: action.payload
+                    flag: false,
+                    msg: null
                 }
             };
         case ADD_PRODUCTS_FAILED:
@@ -100,8 +100,8 @@ export const procuctreducer = (state = INITIAL_STATE, action) => {
                 success_status: action.payload,
                 loading: false,
                 error: {
-                    flag: true,
-                    msg: action.payload
+                    flag: false,
+                    msg: null
                 }
             };
         case EDIT_PRODUCTS_FAILED:
@@ -146,13 +146,13 @@ export const procuctreducer = (state = INITIAL_STATE, action) => {
         case PRODUCT_SEARCH_DATA:
             return {
                 ...state,
-                products: action.payload.users,
+                products: action.payload.products ?? action.payload.users,
                 searchtext: action.payload.searchtext
             };
         case PRODUCT_SEARCH_SEARCH_DATA:
             return {
                 ...state,
-                searchProducts: action.payload.users,
+                searchProducts: action.payload.products ?? action.payload.users,
                 searchtext: action.payload.searchtext
             };
         case FETCH_CART_COUNT:

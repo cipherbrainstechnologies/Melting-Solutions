@@ -21,16 +21,13 @@ export const fetchProducts = (status = null) => (dispatch) => (firebase) => {
   })
 
   try {
-    productsCollection
-      // .where('usertype', '!=', 'admin')
+    const unsubscribe = productsCollection
       .where('isdeleted', '==', 'no')
       .onSnapshot(querySnapshot => {
         let products = []
         if (querySnapshot) {
           querySnapshot.forEach((documentSnapshot) => {
-            // console.log(documentSnapshot.id);
             let data = documentSnapshot.data();
-            // if (data.isdelete == 'no') 
             data.id = documentSnapshot.id
             if (status) {
               if (data.status === status) products.push(data)
@@ -42,12 +39,19 @@ export const fetchProducts = (status = null) => (dispatch) => (firebase) => {
           type: FETCH_ALL_PRODUCTS_SUCCESS,
           payload: products
         });
+      }, (error) => {
+        dispatch({
+          type: FETCH_ALL_PRODUCTS_FAILED,
+          payload: error,
+        });
       });
+    return unsubscribe;
   } catch (error) {
     dispatch({
       type: FETCH_ALL_PRODUCTS_FAILED,
       payload: error,
     });
+    return () => {};
   }
 
 }
@@ -180,7 +184,7 @@ export const searchFilterFunction = (text) => {
   return {
     type: PRODUCT_SEARCH_DATA,
     payload: {
-      users: newData,
+      products: newData,
       searchtext: text
     }
   }
@@ -204,7 +208,7 @@ export const searchFilterFunction2 = (text) => {
   return {
     type: PRODUCT_SEARCH_SEARCH_DATA,
     payload: {
-      users: newData,
+      products: newData,
       searchtext: text
     }
   }

@@ -26,7 +26,7 @@ import { FirebaseContext } from '../../redux';
 import { FontRegular, FontSemiBold, STATUS_QUOTE_ACCEPT_PAYMENT, STATUS_QUOTE_CONFIRMED_PROCESSING, STATUS_QUOTE_SEND } from '../common/Constants';
 import ActionSheet from 'react-native-actions-sheet';
 import Spinner from '../components/Spinner';
-import { convertDate, showToastError, showToastSuccess, STATUS } from '../../redux/actions/Validation';
+import { convertDate, formatFirestoreDate, showToastError, showToastSuccess, STATUS } from '../../redux/actions/Validation';
 
 var { width } = Dimensions.get('window');
 
@@ -83,36 +83,30 @@ function OrderDetails(props) {
     }
 
     const addAmounttoQoute = (id, text) => {
-        if (isNaN(text)) return
-        let totalsum = 0
-        // if (data.cart.length > 0) {
-        let newArr = data.cart.map((item, i) => {
+        if (text !== '' && isNaN(text)) return
+        const newArr = data.cart.map((item) => {
             if (id == item.id) {
-                totalsum = Number(totalsum) + Number(text)
-                return { ...item, ["price"]: text };
-            } else {
-                if (item.price) totalsum = Number(totalsum) + Number(item.price)
-                return item
+                return { ...item, price: text };
             }
+            return item;
         });
+        const totalsum = newArr.reduce((sum, item) => sum + Number(item.price || 0), 0);
         setData({ ...data, cart: newArr, totalPayment: totalsum })
     }
 
     const onProductChecked = (id, status) => {
-        let totalsum = 0
-        let newArr = data.cart.map((item, i) => {
+        const newArr = data.cart.map((item) => {
             if (id == item.id) {
-                if (status) {
-                    totalsum = Number(totalsum) + Number(item.price)
-                    return { ...item, status: "active" };
-                } else {
-                    return { ...item, status: "deactive" };
-                }
-            } else {
-                if (item.price && item.status == "active") totalsum = Number(totalsum) + Number(item.price)
-                return item
+                return { ...item, status: status ? "active" : "deactive" };
             }
+            return item;
         });
+        const totalsum = newArr.reduce((sum, item) => {
+            if (item.status === 'active' && item.price) {
+                return sum + Number(item.price);
+            }
+            return sum;
+        }, 0);
         setData({ ...data, cart: newArr, totalPayment: totalsum })
     }
 
@@ -297,7 +291,7 @@ function OrderDetails(props) {
             <HStack justifyContent="space-between" flex="1" pl="2">
                 <VStack flex="2">
                     <Text style={styles.text1}>{item.title}</Text>
-                    <Text style={{ ...styles.text2, fontSize: 12, paddingTop: -5 }}>Expected date {moment(new Date((item.expectedDate.seconds + item.expectedDate.nanoseconds * 10 ** -9) * 1000)).format("D MMMM YY")}</Text>
+                    <Text style={{ ...styles.text2, fontSize: 12, paddingTop: -5 }}>Expected date {formatFirestoreDate(item.expectedDate, 'D MMM YY')}</Text>
                     {screentype != "user_quote_request" &&
                         <FormControl isRequired isInvalid>
                             <InputCard
@@ -305,7 +299,7 @@ function OrderDetails(props) {
                                     // item.price = text
                                     addAmounttoQoute(item.id, text)
                                 }}
-                                placeholder={"quote price"}
+                                placeholder={"Quote price"}
                                 textInputStyle={{ paddingLeft: 5, paddingBottom: 5, height: 35 }}
                                 cardInputStyle={{ width: "70%" }}
                                 returnKey={"next"}
@@ -345,7 +339,7 @@ function OrderDetails(props) {
             <HStack justifyContent="space-between" flex="1" pl="2">
                 <VStack>
                     <Text style={styles.text1}>{item.title}</Text>
-                    <Text style={{ ...styles.text2, fontSize: 12, paddingTop: -5 }}>Expected date {moment(new Date((item.expectedDate.seconds + item.expectedDate.nanoseconds * 10 ** -9) * 1000)).format("D MMMM YY")}</Text>
+                    <Text style={{ ...styles.text2, fontSize: 12, paddingTop: -5 }}>Expected date {formatFirestoreDate(item.expectedDate, 'D MMM YY')}</Text>
                 </VStack>
                 <VStack>
                     <Text style={{ ...styles.text1, textAlign: 'right' }}>{item.quantity} {item.quantity_type}</Text>
@@ -506,15 +500,14 @@ function OrderDetails(props) {
                     <Center w="100%" >
                         <Box pb="1" w="95%">
 
-                            <Text style={styles.text1}>Order Date</Text>
-                            {/* <Text style={{ ...styles.text2, fontSize: 14, paddingTop: -5 }}>{moment(new Date((data.created.seconds + data.created.nanoseconds * 10 ** -9) * 1000)).format("D MMMM YYYY")}</Text> */}
-                            <Text style={{ ...styles.text2, fontSize: 14, paddingTop: -5 }}>{moment(data.created).format("D MMMM YYYY")}</Text>
+                            <Text style={styles.text1}>Order date</Text>
+                            <Text style={{ ...styles.text2, fontSize: 14, paddingTop: -5 }}>{formatFirestoreDate(data.created)}</Text>
                             <View style={{ height: 20 }} />
                             {data.cart.map(obj => { return renderItem(obj) })}
                             <HStack>
                                 <MaterialIcons name="location-pin" color={colors.BLACK} size={20} style={{ alignSelf: "center" }} />
                                 <VStack ml="2" w="95%">
-                                    <Text style={{ ...styles.text2, fontSize: 16 }}>Deliver At:</Text>
+                                    <Text style={{ ...styles.text2, fontSize: 16 }}>Deliver at:</Text>
                                     <Text style={{ ...styles.text1, marginTop: -2 }}>{`${data.address && data.address.completeAddress}${data.address && data.address.floor && " ," + data.address.floor}${data.address && data.address.nearByLandmark && " ," + data.address.nearByLandmark}`}</Text>
                                 </VStack>
                             </HStack>
@@ -536,15 +529,14 @@ function OrderDetails(props) {
                     <Center w="100%" >
                         <Box pb="1" w="95%">
 
-                            <Text style={styles.text1}>Order Date</Text>
-                            {/* <Text style={{ ...styles.text2, fontSize: 14, paddingTop: -5 }}>{moment(new Date((data.created.seconds + data.created.nanoseconds * 10 ** -9) * 1000)).format("D MMMM YYYY")}</Text> */}
-                            <Text style={{ ...styles.text2, fontSize: 14, paddingTop: -5 }}>{moment(data.created).format("D MMMM YYYY")}</Text>
+                            <Text style={styles.text1}>Order date</Text>
+                            <Text style={{ ...styles.text2, fontSize: 14, paddingTop: -5 }}>{formatFirestoreDate(data.created)}</Text>
                             <View style={{ height: 20 }} />
                             {data.cart.map(obj => { return renderItem(obj) })}
                             <HStack>
                                 <MaterialIcons name="location-pin" color={colors.BLACK} size={20} style={{ alignSelf: "center" }} />
                                 <VStack ml="2" w="95%">
-                                    <Text style={{ ...styles.text2, fontSize: 16 }}>Deliver At:</Text>
+                                    <Text style={{ ...styles.text2, fontSize: 16 }}>Deliver at:</Text>
                                     <Text style={{ ...styles.text1, marginTop: -2 }}>{`${data.address && data.address.completeAddress}${data.address && data.address.floor && " ," + data.address.floor}${data.address && data.address.nearByLandmark && " ," + data.address.nearByLandmark}`}</Text>
                                 </VStack>
                             </HStack>
@@ -559,14 +551,14 @@ function OrderDetails(props) {
                             />
 
                             <HStack justifyContent={"space-between"} mt="4">
-                                <Text style={{ ...globleStyles.subHeader, fontSize: 20 }}>Total Payment</Text>
+                                <Text style={{ ...globleStyles.subHeader, fontSize: 20 }}>Total payment</Text>
                                 <Text style={{ ...globleStyles.subHeader, color: colors.BLACK, fontSize: 20 }}>
                                     {/* ₹6000 */}
                                     ₹{data.totalPayment || 0}
                                 </Text>
                             </HStack>
 
-                            {screentype == "admin_quote_request" && <MaterialButtonDark onPress={() => sendQuote()} style={styles.materialButton}>Send Quote</MaterialButtonDark>}
+                            {screentype == "admin_quote_request" && <MaterialButtonDark onPress={() => sendQuote()} style={styles.materialButton}>Send quote</MaterialButtonDark>}
 
                         </Box>
                     </Center>
@@ -577,15 +569,14 @@ function OrderDetails(props) {
                     <Center w="100%" >
                         <Box pb="1" w="95%">
 
-                            <Text style={styles.text1}>Order Date</Text>
-                            {/* <Text style={{ ...styles.text2, fontSize: 14, paddingTop: -5 }}>{moment(new Date((data.created.seconds + data.created.nanoseconds * 10 ** -9) * 1000)).format("D MMMM YYYY")}</Text> */}
-                            <Text style={{ ...styles.text2, fontSize: 14, paddingTop: -5 }}>{moment(data.created).format("D MMMM YYYY")}</Text>
+                            <Text style={styles.text1}>Order date</Text>
+                            <Text style={{ ...styles.text2, fontSize: 14, paddingTop: -5 }}>{formatFirestoreDate(data.created)}</Text>
                             <View style={{ height: 20 }} />
                             {data.cart.map(obj => { return renderItem1(obj) })}
                             <HStack>
                                 <MaterialIcons name="location-pin" color={colors.BLACK} size={20} style={{ alignSelf: "center" }} />
                                 <VStack ml="2" w="95%">
-                                    <Text style={{ ...styles.text2, fontSize: 16 }}>Deliver At:</Text>
+                                    <Text style={{ ...styles.text2, fontSize: 16 }}>Deliver at:</Text>
                                     <Text style={{ ...styles.text1, marginTop: -2 }}>{`${data.address && data.address.completeAddress}${data.address && data.address.floor && " ," + data.address.floor}${data.address && data.address.nearByLandmark && " ," + data.address.nearByLandmark}`}</Text>
                                 </VStack>
                             </HStack>
@@ -600,7 +591,7 @@ function OrderDetails(props) {
                             />
 
                             <HStack justifyContent={"space-between"} mt="4">
-                                <Text style={{ ...globleStyles.subHeader, fontSize: 20 }}>Total Payment</Text>
+                                <Text style={{ ...globleStyles.subHeader, fontSize: 20 }}>Total payment</Text>
                                 <Text style={{ ...globleStyles.subHeader, color: colors.BLACK, fontSize: 20 }}>
                                     {/* ₹6000 */}
                                     ₹{data.totalPayment || 0}
@@ -663,7 +654,7 @@ function OrderDetails(props) {
                             <HStack paddingY={2}>
                                 <MaterialIcons name="location-pin" color={colors.BLACK} size={20} style={{ alignSelf: "center" }} />
                                 <VStack ml="2" w="95%">
-                                    <Text style={{ ...styles.text2, fontSize: 16 }}>Deliver At:</Text>
+                                    <Text style={{ ...styles.text2, fontSize: 16 }}>Deliver at:</Text>
                                     <Text style={{ ...styles.text1, marginTop: -2 }}>{`${data.address && data.address.completeAddress}${data.address && data.address.floor && " ," + data.address.floor}${data.address && data.address.nearByLandmark && " ," + data.address.nearByLandmark}`}</Text>
                                 </VStack>
                             </HStack>
@@ -688,7 +679,7 @@ function OrderDetails(props) {
                             {/* <View style={{ height: 1, backgroundColor: colors.GREY_3, marginVertical: 10 }} /> */}
 
                             <HStack justifyContent={"space-between"} mt="0">
-                                <Text style={{ ...globleStyles.subHeader, fontSize: 20 }}>Total Payment</Text>
+                                <Text style={{ ...globleStyles.subHeader, fontSize: 20 }}>Total payment</Text>
                                 <Text style={{ ...globleStyles.subHeader, color: colors.BLACK, fontSize: 20 }}>
                                     {/* ₹6000 */}
                                     ₹{data.totalPayment || 0}

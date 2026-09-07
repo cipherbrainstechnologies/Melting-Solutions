@@ -25,12 +25,13 @@ import { useRefresh } from '../hooks/useRefresh';
 import { storageKeys } from '../common/storage';
 import { trackEvent, AnalyticsEvents } from '../common/analytics';
 import { STATUS_ORDER_COMPLETED, STATUS_QUOTE_REQUESTED, STATUS_QUOTE_SEND } from '../common/Constants';
+import { PRODUCT_RESET } from '../../redux/store/type';
 
 const DASHBOARD_ITEMS = [
-    { title: 'Total Users', key: 'totalUsers', icon: require('../../assets/user-menu-icon.png'), route: 'Users' },
-    { title: 'Total Products', key: 'totalProducts', icon: require('../../assets/total-products-icon.png'), route: 'Products' },
-    { title: 'Send Quotes', key: 'totalSendQuotes', icon: require('../../assets/send-quotes-icon.png'), route: 'Order' },
-    { title: 'Completed Order', key: 'totalCompleteOrders', icon: require('../../assets/complate-order-icon.png'), route: 'Order' },
+    { title: 'Total users', key: 'totalUsers', icon: require('../../assets/user-menu-icon.png'), route: 'Users' },
+    { title: 'Total products', key: 'totalProducts', icon: require('../../assets/total-products-icon.png'), route: 'Products' },
+    { title: 'Send quotes', key: 'totalSendQuotes', icon: require('../../assets/send-quotes-icon.png'), route: 'Order' },
+    { title: 'Completed orders', key: 'totalCompleteOrders', icon: require('../../assets/complate-order-icon.png'), route: 'Order' },
     { title: 'Reports', key: 'reports', icon: require('../../assets/reports-icon.png'), route: 'Reports', hideCount: true },
     { title: 'Broadcast', key: 'broadcast', icon: require('../../assets/received_quotes-icon.png'), route: 'NotificationBroadcast', hideCount: true },
 ];
@@ -109,7 +110,10 @@ function HomeAdmin(props) {
                         activeUsers={props.growthActiveUsers}
                         pendingQuotes={props.growthPendingQuotes}
                         onAddUser={() => props.navigation.navigate('Users')}
-                        onAddProduct={() => props.navigation.navigate('Products')}
+                        onAddProduct={() => {
+                            dispatch({ type: PRODUCT_RESET, payload: null });
+                            props.navigation.navigate('AddProduct');
+                        }}
                         onBroadcast={() => props.navigation.navigate('NotificationBroadcast')}
                     />
 
