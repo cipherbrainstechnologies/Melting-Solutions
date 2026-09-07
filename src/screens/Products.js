@@ -10,8 +10,8 @@ import {
     RefreshControl,
 } from 'react-native';
 import globleStyles from '../common/globleStyles';
-import { colors, layout } from '../common/theme';
-import { useWindowWidth } from '../common/responsive';
+import { colors } from '../common/theme';
+import { layout, useWindowWidth } from '../common/responsive';
 import Header from '../components/Header';
 import { InputCard } from '../components/InputCard';
 import { Entypo, Ionicons } from 'react-native-vector-icons';
