@@ -20,6 +20,7 @@ import ActionSheet from "react-native-actions-sheet";
 import Spinner from './Spinner';
 import * as actions from '../../redux/actions/useractions';
 import { showToastError } from '../../redux/actions/Validation';
+import { getImagePickerUri } from '../common/imagePicker';
 import { FontBold } from '../common/Constants';
 var { width } = Dimensions.get('window');
 
@@ -124,8 +125,9 @@ function ProfileComponent(props) {
             });
 
             actionSheetRef.current?.setModalVisible(false);
-            if (!result.cancelled) {
-                setState({ ...state, image: result.uri })
+            const uri = getImagePickerUri(result);
+            if (uri) {
+                setState({ ...state, image: uri })
             }
         } else {
             Alert.alert('Alert', 'Camera Permisison Error')

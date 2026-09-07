@@ -24,7 +24,7 @@ import { FirebaseContext } from '../../redux';
 import moment from 'moment';
 import ActionSheet from 'react-native-actions-sheet';
 import { FontBold, FontMedium, FontRegular, FontSemiBold } from '../common/Constants';
-import { showToastError, showToastSuccess } from '../../redux/actions/Validation';
+import { showToastError, showToastSuccess, formatFirestoreDate } from '../../redux/actions/Validation';
 import Spinner from '../components/Spinner';
 import { CLEAR_CART } from '../../redux/store/type';
 
@@ -188,7 +188,7 @@ function Cart(props) {
             <HStack justifyContent="space-between" flex="1" pl="2">
                 <VStack>
                     <Text style={styles.text1}>{item.title}</Text>
-                    <Text style={{ ...styles.text2, fontSize: 12, paddingTop: -5 }}>Expected date {moment(item.expectedDate.toDate()).format("D MMMM YY")}</Text>
+                    <Text style={{ ...styles.text2, fontSize: 12, paddingTop: -5 }}>Expected date {formatFirestoreDate(item.expectedDate, 'D MMM YY')}</Text>
                 </VStack>
                 <VStack>
                     <Text style={{ ...styles.text1, textAlign: 'right' }}>{item.quantity} {item.quantity_type}</Text>
@@ -258,7 +258,7 @@ function Cart(props) {
                                 <Text style={{ ...globleStyles.subHeader, fontSize: 20 }}>Total Payment</Text>
                                 <Text style={{ ...globleStyles.subHeader, color: colors.BLACK, fontSize: 20 }}>₹6000</Text>
                             </HStack> */}
-                            <MaterialButtonDark onPress={() => _attemptSubmit()}>Submit for Quote</MaterialButtonDark>
+                            <MaterialButtonDark onPress={() => _attemptSubmit()}>Submit for quote</MaterialButtonDark>
 
 
                         </Box>

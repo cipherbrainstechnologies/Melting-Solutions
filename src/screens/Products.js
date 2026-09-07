@@ -40,10 +40,11 @@ function Products(props) {
     const onClose = () => setIsOpen(false);
 
     useEffect(() => {
-        if (props.error && props.error.msg) {
+        if (props.error?.flag && props.error?.msg) {
             showToastError(props.error.msg);
+            dispatch(api.clearProductError());
         }
-    }, [props.error, props.error.msg]);
+    }, [props.error, props.error?.flag, props.error?.msg, dispatch, api]);
 
     useEffect(() => {
         unsubRef = dispatch(api.fetchProducts());

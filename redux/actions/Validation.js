@@ -184,8 +184,26 @@ export const validURL = string => {
 }
 
 export const convertDate = (date) => {
-  return new Date((date.seconds + date.nanoseconds * 10 ** -9) * 1000)
-}
+  if (!date) return null;
+  if (date instanceof Date) return date;
+  if (typeof date.toDate === 'function') return date.toDate();
+  if (date.seconds !== undefined) {
+    return new Date((date.seconds + date.nanoseconds * 10 ** -9) * 1000);
+  }
+  if (typeof date === 'string' || typeof date === 'number') {
+    return new Date(date);
+  }
+  return null;
+};
+
+export const toJsDate = (value) => convertDate(value);
+
+export const formatFirestoreDate = (value, format = 'D MMMM YYYY') => {
+  const date = toJsDate(value);
+  if (!date || Number.isNaN(date.getTime())) return '—';
+  const moment = require('moment');
+  return moment(date).format(format);
+};
 
 export const STATUS = [
   {

@@ -30,6 +30,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Spinner from '../components/Spinner';
 import moment from 'moment';
 import { sendNotification, uploadImagetoFirebase } from '../../redux/actions/Validation';
+import { getImagePickerUri } from '../common/imagePicker';
 
 
 var { width } = Dimensions.get('window');
@@ -463,8 +464,10 @@ export default function ChatBoard(props) {
             });
 
             actionSheetRef.current?.setModalVisible(false);
-            if (!result.cancelled) {
-                let data = 'data:image/jpeg;base64,' + result.base64;
+            const uri = getImagePickerUri(result);
+            if (uri) {
+                const base64 = result.assets?.[0]?.base64 || result.base64;
+                let data = base64 ? 'data:image/jpeg;base64,' + base64 : uri;
                 const blob = await new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
                     xhr.onload = function () {
@@ -473,9 +476,10 @@ export default function ChatBoard(props) {
                     xhr.onerror = function () {
                         Alert.alert('Alert', 'Image upload error');
                         setLoading(false);
+                        reject(new Error('Image upload error'));
                     };
                     xhr.responseType = 'blob';
-                    xhr.open('GET', Platform.OS == 'ios' ? data : result.uri, true);
+                    xhr.open('GET', Platform.OS == 'ios' && base64 ? data : uri, true);
                     xhr.send(null);
                 });
                 onSubmit(blob)

@@ -6,12 +6,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ScrollView,
   Image
 } from 'react-native';
-import { NavigationActions } from "react-navigation";
-import NavigationService from './NavigationService';
 import { confirmSignOut, performSignOut } from '../common/logout';
 import Spinner from './Spinner';
 import globleStyles from '../common/globleStyles';
@@ -82,10 +79,6 @@ export default function Drawer(props) {
   const onLogout = () => {
     props.navigation.closeDrawer();
     confirmSignOut(() => performSignOut(dispatch, api.signOut));
-  }
-
-  const logout = () => {
-    performSignOut(dispatch, api.signOut);
   }
 
   const showSubscriptionBtn = () => {
